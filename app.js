@@ -1690,6 +1690,7 @@ document.getElementById('populate-db-btn').addEventListener('click', async (e) =
 
 // === DADOS INICIAIS (POPULAR DB) ===
 function getInitialData() {
+  // Primeiro, definir os instrutores
   const initialInstructors = [
     { id: "marllon", name: "Marllon Costa", title: "Técnico em TI | Designer | Inovação e IA", image: "https://i.postimg.cc/sxm4TVvF/IMG-9781.jpg", bio: "Designer gráfico, graduando em marketing e autodidata em Inovação e IA." },
     { id: "vinicius", name: "Vinícius Sena", title: "Fotógrafo Documental | Pós-produção", image: "https://i.postimg.cc/bw7kHG3D/vinicius.jpg", bio: "Formado em Animação, estudante e entusiasta de fotografia desde 2019." },
@@ -1698,7 +1699,18 @@ function getInitialData() {
     { id: "deyse", name: "Deyse Pereira", title: "Estrategista em Comunicação | Gestão de Projetos", image: "https://i.postimg.cc/T1sL3bXz/IMG-7381-jpg.png", bio: "Mestre em Design de Artefatos Digitais, pós-graduanda em Gestão de Projetos." }
   ];
   
+  // Mapear os instrutores para fácil acesso
+  const instMap = {
+    marllon: initialInstructors[0],
+    vinicius: initialInstructors[1],
+    bruno: initialInstructors[2],
+    keven: initialInstructors[3],
+    deyse: initialInstructors[4]
+  };
+
+  // Agora, definir os cursos
   const initialCourses = [
+    // --- Cursos Abertos ---
     {
       id: "fotografia",
       title: "Workshop de Fotografia",
@@ -1727,10 +1739,7 @@ function getInitialData() {
         { "title": "Exercício de Conhecimento", "description": "Os participantes tiram 3-5 fotos com diferentes tipos de iluminação." }
       ],
       requirements: ["Não são necessários pré-requisitos.", "Incentivamos a trazer o seu próprio smartphone ou câmara."],
-      instructors: [
-        { id: "bruno", name: "Bruno Diogo", title: "Supervisor de Marketing | Designer | UX/UI", image: "https://i.postimg.cc/yNhgmLJK/IMG-7311.avif", bio: "Supervisor de Marketing e Mídias Visuais | Designer Gráfico e Digital." },
-        { id: "vinicius", name: "Vinícius Sena", title: "Fotógrafo Documental | Pós-produção", image: "https://i.postimg.cc/bw7kHG3D/vinicius.jpg", bio: "Formado em Animação, estudante e entusiasta de fotografia desde 2019." }
-      ],
+      instructors: [ instMap.bruno, instMap.vinicius ],
       isRatingEnabled: true
     },
     {
@@ -1761,9 +1770,171 @@ function getInitialData() {
         { "title": "Oficina: Dashboard no Ar", "description": "Passo a passo guiado para publicar o dashboard online." }
       ],
       requirements: ["Indispensável ter um notebook.", "Conta Google (Gemini)", "Conta no GitHub."],
-      instructors: [
-        { id: "marllon", name: "Marllon Costa", title: "Técnico em TI | Designer | Inovação e IA", image: "https://i.postimg.cc/sxm4TVvF/IMG-9781.jpg", bio: "Designer gráfico, graduando em marketing e autodidata em Inovação e IA." }
+      instructors: [ instMap.marllon ],
+      isRatingEnabled: false
+    },
+    
+    // --- NOVOS CURSOS "EM BREVE" ---
+    {
+      id: "conteudo_criativo",
+      title: "Introdução à Criação de Conteúdo Criativo",
+      subtitle: "Da Ideia ao Engajamento",
+      summary: "Aprenda a planear, criar e distribuir conteúdo que cative a sua audiência nas redes sociais.",
+      fullDescription: "Neste workshop prático, Marllon, Vini e Keven partilham as suas técnicas para criar conteúdo visual e escrito que gera impacto. Cobre tudo, desde a captação de fotos e vídeos até ao design rápido no Canva e Motion Design.",
+      targetAudience: "Colaboradores das áreas de comunicação, marketing, e qualquer pessoa interessada em melhorar a presença digital dos projetos.",
+      themeColor: "#6a4c93", // Brand Purple
+      themeColorDark: "#583f7a",
+      icon: "fa-lightbulb",
+      status: "em_breve",
+      headerOverlayImage: "https://placehold.co/600x400/6a4c93/white?text=Conteúdo+Criativo",
+      details: {"Data": "A Definir", "Carga": "4 horas", "Modalidade": "Presencial"},
+      learningObjectives: [
+        "Planear um calendário editorial",
+        "Técnicas de captação de vídeo com telemóvel",
+        "Design de posts no Canva"
       ],
+      modules: [
+        { "title": "Módulo 1: Planeamento", "topics": ["Definindo a audiência", "Tipos de conteúdo", "Calendário"]},
+        { "title": "Módulo 2: Criação", "topics": ["Captação e Edição", "Design no Canva", "Noções de Motion"]}
+      ],
+      practicalActivities: [],
+      requirements: ["Telemóvel com câmara", "Acesso ao Canva (gratuito)"],
+      instructors: [ instMap.marllon, instMap.vinicius, instMap.keven ],
+      isRatingEnabled: false
+    },
+    {
+      id: "storytelling_copy",
+      title: "Storytelling e Copywriting",
+      subtitle: "A Arte de Contar Histórias que Vendem",
+      summary: "Domine as técnicas de escrita persuasiva e storytelling para criar narrativas envolventes.",
+      fullDescription: "As palavras têm o poder de transformar. Aprenda com Marllon e Vini a estruturar uma boa história, escrever títulos que chamam a atenção (copy) e criar textos que conectam emocionalmente com o público.",
+      targetAudience: "Ideal para equipas de comunicação, marketing, jornalismo e gestão de projetos.",
+      themeColor: "#ff6b35", // Brand Orange
+      themeColorDark: "#d95a2b",
+      icon: "fa-pen-nib",
+      status: "em_breve",
+      headerOverlayImage: "https://placehold.co/600x400/ff6b35/white?text=Storytelling",
+      details: {"Data": "A Definir", "Carga": "3 horas", "Modalidade": "Online"},
+      learningObjectives: [
+        "Entender a jornada do herói",
+        "Escrever copy para redes sociais",
+        "Aplicar gatilhos mentais éticos"
+      ],
+      modules: [
+        { "title": "Módulo 1: Storytelling", "topics": ["O que é uma história", "Jornada do Herói", "Conexão Emocional"]},
+        { "title": "Módulo 2: Copywriting", "topics": ["Títulos e Headlines", "Gatilhos Mentais", "Chamada para Ação (CTA)"]}
+      ],
+      practicalActivities: [],
+      requirements: ["Caderno de notas ou computador para exercícios de escrita."],
+      instructors: [ instMap.marllon, instMap.vinicius ],
+      isRatingEnabled: false
+    },
+    {
+      id: "design_thinking",
+      title: "Design Thinking",
+      subtitle: "Inovação Focada no Ser Humano",
+      summary: "Aprenda a metodologia de Design Thinking para resolver problemas complexos de forma criativa.",
+      fullDescription: "Guiado por Deyse Pereira, este workshop introduz as 5 fases do Design Thinking: Empatia, Definição, Ideação, Prototipagem e Teste. Uma abordagem prática para inovar em processos e projetos.",
+      targetAudience: "Gestores, líderes de projeto e qualquer colaborador que queira aprender a inovar.",
+      themeColor: "#00a896", // Brand Teal
+      themeColorDark: "#008a7b",
+      icon: "fa-users",
+      status: "em_breve",
+      headerOverlayImage: "https://placehold.co/600x400/00a896/white?text=Design+Thinking",
+      details: {"Data": "A Definir", "Carga": "4 horas", "Modalidade": "Presencial"},
+      learningObjectives: [
+        "Mapear a jornada do usuário",
+        "Conduzir sessões de brainstorming (ideação)",
+        "Criar protótipos de baixa fidelidade"
+      ],
+      modules: [
+        { "title": "Módulo 1: Imersão", "topics": ["Empatia", "Definição do Problema"]},
+        { "title": "Módulo 2: Criação", "topics": ["Ideação", "Prototipagem", "Teste e Iteração"]}
+      ],
+      practicalActivities: [],
+      requirements: ["Vontade de colaborar e post-its!"],
+      instructors: [ instMap.deyse ],
+      isRatingEnabled: false
+    },
+    {
+      id: "metodologias_ageis",
+      title: "Scrum e Kanban",
+      subtitle: "Gestão Ágil para Resultados Rápidos",
+      summary: "Uma introdução prática aos frameworks ágeis mais usados no mercado para gestão de tarefas.",
+      fullDescription: "Cansado de projetos que se arrastam? Deyse Pereira apresenta os fundamentos do Scrum (Sprints, Papéis) e do Kanban (Fluxo Contínuo, WIP) para otimizar a produtividade da sua equipa.",
+      targetAudience: "Gestores de projeto, equipas de desenvolvimento, e equipas administrativas que queiram melhorar o seu fluxo de trabalho.",
+      themeColor: "#0066cc", // Brand Blue
+      themeColorDark: "#004c99",
+      icon: "fa-tasks",
+      status: "em_breve",
+      headerOverlayImage: "https://placehold.co/600x400/0066cc/white?text=Scrum+e+Kanban",
+      details: {"Data": "A Definir", "Carga": "3 horas", "Modalidade": "Presencial"},
+      learningObjectives: [
+        "Diferenciar Scrum e Kanban",
+        "Implementar um quadro Kanban simples",
+        "Entender o ciclo de uma Sprint"
+      ],
+      modules: [
+        { "title": "Módulo 1: Scrum", "topics": ["Papéis (PO, SM, Dev Team)", "Eventos (Sprint, Planning, Daily, Review)", "Artefatos"]},
+        { "title": "Módulo 2: Kanban", "topics": ["Princípios do Kanban", "Métricas (Lead Time, Cycle Time)", "WIP (Work In Progress)"]}
+      ],
+      practicalActivities: [],
+      requirements: ["Não há pré-requisitos."],
+      instructors: [ instMap.deyse ],
+      isRatingEnabled: false
+    },
+    {
+      id: "gestao_notion",
+      title: "Gestão de Projetos c/ Notion",
+      subtitle: "O Seu Segundo Cérebro Organizacional",
+      summary: "Configure um dashboard de gestão de projetos no Notion, integrando tarefas, documentos e cronogramas.",
+      fullDescription: "O Notion é a ferramenta 'tudo-em-um' para organização. Vinícius Sena vai mostrar como sair do zero e construir um sistema robusto para gerir projetos, equipas e conhecimento pessoal de forma integrada.",
+      targetAudience: "Gestores de projeto, equipas de marketing, e qualquer pessoa que queira organizar melhor o seu trabalho.",
+      themeColor: "#333333", // Dark Grey/Notion Black
+      themeColorDark: "#1a1a1a",
+      icon: "fa-check-square",
+      status: "em_breve",
+      headerOverlayImage: "https://placehold.co/600x400/333333/white?text=Notion",
+      details: {"Data": "A Definir", "Carga": "4 horas", "Modalidade": "Online"},
+      learningObjectives: [
+        "Criar e relacionar bases de dados (Databases)",
+        "Configurar um cronograma (Timeline)",
+        "Criar templates de páginas"
+      ],
+      modules: [
+        { "title": "Módulo 1: Fundamentos", "topics": ["Blocos, Páginas e Bases de Dados", "Vistas (Views) de Bases de Dados"]},
+        { "title": "Módulo 2: Gestão de Projetos", "topics": ["Criando o Master Dashboard", "Relacionando Tarefas e Projetos", "Templates e Automação"]}
+      ],
+      practicalActivities: [],
+      requirements: ["Conta gratuita no Notion", "Computador portátil."],
+      instructors: [ instMap.vinicius ],
+      isRatingEnabled: false
+    },
+    {
+      id: "trafego_pago",
+      title: "Marketing Estratégico: Tráfego Pago",
+      subtitle: "Anúncios Práticos no Meta Ads",
+      summary: "Aprenda a criar, segmentar e otimizar campanhas de tráfego pago no Facebook e Instagram Ads.",
+      fullDescription: "Não basta criar conteúdo, é preciso fazê-lo chegar às pessoas certas. Marllon Costa vai guiar-vos pelo Gerenciador de Anúncios do Meta, desde a configuração do pixel até à análise de métricas de conversão.",
+      targetAudience: "Equipa de comunicação, marketing e gestores interessados em promover eventos e projetos.",
+      themeColor: "#1877F2", // Facebook Blue
+      themeColorDark: "#125bbf",
+      icon: "fa-bullhorn",
+      status: "em_breve",
+      headerOverlayImage: "https://placehold.co/600x400/1877F2/white?text=Meta+Ads",
+      details: {"Data": "A Definir", "Carga": "4 horas", "Modalidade": "Online"},
+      learningObjectives: [
+        "Entender a estrutura de campanhas (Campanha, Conjunto, Anúncio)",
+        "Segmentar públicos (Interesses, Lookalike, Remarketing)",
+        "Analisar métricas (CPC, CTR, CPA)"
+      ],
+      modules: [
+        { "title": "Módulo 1: Estratégia", "topics": ["Objetivos de Campanha", "Configuração do Pixel", "Públicos"]},
+        { "title": "Módulo 2: Execução", "topics": ["Criando o primeiro anúncio", "Testes A/B", "Análise de Métricas e Otimização"]}
+      ],
+      practicalActivities: [],
+      requirements: ["Acesso a uma conta de anúncios do Meta (Facebook)."],
+      instructors: [ instMap.marllon ],
       isRatingEnabled: false
     }
   ];
