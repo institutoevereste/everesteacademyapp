@@ -138,6 +138,9 @@ const modalRating = document.getElementById('modalRating');
 const modalConfirmDelete = document.getElementById('modalConfirmDelete');
 const modalEditCourse = document.getElementById('modalEditCourse');
 const modalEditInstructor = document.getElementById('modalEditInstructor');
+// ADICIONADO: Modal de Privacidade
+const modalPrivacyPolicy = document.getElementById('modalPrivacyPolicy');
+
 
 // Função para mostrar/esconder o painel de Admin
 function setAdminUI(isAdmin) {
@@ -1973,6 +1976,10 @@ document.getElementById('courseFormCancel')?.addEventListener('click', () => _cl
 document.getElementById('closeEditInstructor')?.addEventListener('click', () => _closeModal(modalEditInstructor));
 document.getElementById('instructorFormCancel')?.addEventListener('click', () => _closeModal(modalEditInstructor));
 
+// ADICIONADO: Handlers do Modal de Privacidade
+document.getElementById('closePrivacy')?.addEventListener('click', () => _closeModal(modalPrivacyPolicy));
+document.getElementById('closePrivacyBtn')?.addEventListener('click', () => _closeModal(modalPrivacyPolicy));
+
 
 // Animação de Scroll (Reveal)
 const io = new IntersectionObserver((entries) => {
@@ -2020,9 +2027,15 @@ document.getElementById('logo-link').addEventListener('click', (e) => {
   showView('main');
 });
 
-// Link Política de Privacidade (placeholder)
+// ATUALIZADO: Link Política de Privacidade (Rodapé)
 document.getElementById('privacy-policy-link').addEventListener('click', (e) => {
   e.preventDefault();
-  showToast("Página de Política de Privacidade ainda não implementada.", "error");
+  _openModal(modalPrivacyPolicy);
+});
+
+// ADICIONADO: Link Política de Privacidade (Modal de Inscrição)
+document.getElementById('open-privacy-enroll')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  _openModal(modalPrivacyPolicy);
 });
 
