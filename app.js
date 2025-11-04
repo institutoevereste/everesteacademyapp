@@ -1,3 +1,6 @@
+/* global Chart */
+
+// === IMPORTAÇÕES DO FIREBASE ===
 // Importar funções do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
@@ -250,17 +253,18 @@ onAuthStateChanged(auth, async (user) => {
       await checkAdminStatus(user.uid);
       setAdminUI(isAdmin);
       if (isAdmin) {
+        // Carrega dados do dashboard se for admin
         loadAdminDashboardData();
         renderEnrollmentsChart();
         renderRatingsChart();
       }
     }
     
-    // Carregar dados públicos
+    // Carregar dados públicos (sempre)
     loadCourses();
     loadInstructors();
     
-    // Carregar dados privados do usuário
+    // Carregar dados privados do usuário (sempre)
     loadUserCheckins(user.uid);
     
   } else {
@@ -1048,6 +1052,11 @@ document.getElementById('admin-nav').addEventListener('click', (e) => {
       case 'admin-instrutores': 
         destroyCharts();
         loadAdminInstructors(); 
+        break;
+      // ADICIONADO: Case para 'admin-config'
+      case 'admin-config':
+        destroyCharts(); // Limpa gráficos
+        // Não precisa carregar dados, o botão já está no HTML
         break;
     }
   }
