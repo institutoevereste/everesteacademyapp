@@ -776,57 +776,75 @@ body {
   align-items: center;
 }
 
-/* ADICIONADO: Animação do Título do Hero (Concept 3) */
+/* Animação Hero Título (Concept 3) */
 .hero-title-animation-wrapper {
-  position: relative;
-  /* Define um espaço para a animação e substitui o mb-4 do h1 */
-  margin-bottom: 1rem; 
-  min-height: 6rem; /* Altura para o texto e movimento */
-  
-  /* Usa grid para sobrepor as zonas de hover e o título */
+  display: flex;
+  align-items: center;
+  max-width: 100%; /* Ajustado de 500px */
+  margin: auto;
+  position: relative; /* Necessário para as zonas de hover */
+}
+.hover-zone {
+  flex: 1;
   display: grid;
-  grid-template-rows: 1fr 1fr; /* Duas linhas (zonas sup/inf) */
-  grid-template-columns: 1fr;
+  height: 100px; /* Altura da zona de hover */
+  grid: repeat(2, 1fr) / 100%; /* 2 zonas: Cima e Baixo */
+  position: absolute; /* Sobrepõe ao .hero-title-animation-wrapper */
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 5; /* Fica por cima do título */
   cursor: pointer;
 }
-
-.hero-title-animation-wrapper > * {
-  /* Coloca todos os filhos (zonas e h1) na mesma célula */
-  grid-row: 1 / -1;
-  grid-column: 1 / -1;
-  align-self: center; /* Centraliza verticalmente */
+.hover-zone-top {
+  grid-row: 1;
 }
-
-.hover-zone {
-  position: relative;
-  z-index: 5; /* Fica por cima do h1 */
+.hover-zone-bottom {
+  grid-row: 2;
 }
-
-.hover-zone.hover-top {
-  grid-row: 1 / 2; /* Metade de cima */
-}
-.hover-zone.hover-bottom {
-  grid-row: 2 / 3; /* Metade de baixo */
-}
-
-h1.hero-animated-title {
-  margin-bottom: 0 !important; /* Remove a margem original */
+.hero-animated-title {
   position: relative;
   z-index: 0; /* Fica por baixo das zonas de hover */
-  
-  /* Estado inicial (centrado) */
-  top: 0;
-  
-  /* Transição suave */
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: margin-top 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  margin-top: 0; /* Posição inicial */
+  text-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+/* Animação ao passar o rato */
+.hover-zone-top:hover ~ .hero-animated-title {
+  margin-top: -10px; /* Move para Cima */
+}
+.hover-zone-bottom:hover ~ .hero-animated-title {
+  margin-top: 10px; /* Move para Baixo */
 }
 
-/* As regras de hover que movem o h1 (irmão ~) */
-.hero-title-animation-wrapper .hover-top:hover ~ h1.hero-animated-title {
-  top: -10px; /* Move para cima */
+/* Estilos para o Modal de Privacidade (Prose) */
+.prose {
+  font-size: 1rem;
+  line-height: 1.6;
 }
-
-.hero-title-animation-wrapper .hover-bottom:hover ~ h1.hero-animated-title {
-  top: 10px; /* Move para baixo */
+.prose h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: #1e293b;
+}
+.prose h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  color: #334155;
+}
+.prose p {
+  margin-bottom: 1.2em;
+}
+.prose ul, .prose ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1.2em;
+}
+.prose ul li, .prose ol li {
+  margin-bottom: 0.5em;
 }
 
