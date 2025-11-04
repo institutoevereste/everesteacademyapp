@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evereste Academy</title>
+  
+  <!-- Fontes e Ícones -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- RE-ADICIONADO: Chart.js (necessário para os gráficos) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Folha de Estilo Personalizada -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="antialiased">
+  <!-- Container de Notificações Toast -->
+  <div id="toast-container"></div>
+  
+  <!-- Scroll Progress Bar -->
+  <div id="scroll-progress"></div>
+
+  <!-- Header -->
+  <header id="header" class="header-glass">
+    <div class="container mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="#" id="logo-link" class="cursor-pointer">
+          <img src="https://i.postimg.cc/hvvWCwnk/Prancheta-1-1.png" alt="Logo LIDS" class="h-10 w-auto" />
+        </a>
+      </div>
+      <div class="flex items-center gap-4">
+        <!-- Botão Admin visível apenas se logado como admin -->
+        <button id="adminBtnHeader" class="btn-ghost text-sm"><i class="fas fa-lock mr-2"></i>Admin</button>
+        <!-- Botão Logout visível apenas se logado como admin -->
+        <button id="logoutBtnHeader" class="btn-danger text-sm hidden"><i class="fas fa-right-from-bracket mr-2"></i>Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View (Course List) -->
+  <div id="main-view">
+    <!-- Hero (Tema Escuro) -->
+    <section class="hero relative text-white">
+      <div class="relative z-10 container mx-auto px-6 py-24 md:py-32">
+        <div class="reveal max-w-3xl">
+          <span class="badge mb-5" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;"><i class="fa-solid fa-bolt"></i> Inscrições Abertas</span>
+          <h1 class="text-5xl md:text-7xl font-black leading-tight mb-4" style="color: white;">Evereste Academy</h1>
+          <p class="text-lg md:text-xl text-slate-200 max-w-2xl mb-8">Formações práticas e focadas em resultados para elevar a excelência do Instituto Evereste. Profissionalismo, dinamismo e tecnologia a favor do seu desenvolvimento.</p>
+          <div class="flex items-center gap-4 flex-wrap">
+            <a href="#cursos" class="btn-primary"><i class="fa-solid fa-graduation-cap mr-2"></i> Ver Cursos</a>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-indicator text-white text-2xl">
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="particles" id="particles"></div>
+      <img src="https://i.postimg.cc/4xNpxRZJ/capabannerlids.png" alt="Banner" class="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none" />
+    </section>
+
+    <!-- Cursos Disponíveis -->
+    <section id="cursos" class="section-light container mx-auto px-6 py-20 md:py-28 relative">
+      <div class="blur-blob" style="background: var(--brand-blue); top: -200px; right: -200px;"></div>
+      <div class="blur-blob" style="background: var(--brand-orange); bottom: -200px; left: -200px;"></div>
+      
+      <!-- Cursos com Vagas Abertas -->
+      <div class="reveal text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-black mb-4" style="color: var(--text);">Cursos Disponíveis</h2>
+        <p class="text-lg" style="color: var(--text-muted);">Inscrições abertas para as próximas turmas</p>
+      </div>
+      <div id="courses-list-open" class="grid md:grid-cols-2 gap-8 mb-20">
+        <!-- Cards de cursos com status 'aberto' -->
+        <p class="text-center md:col-span-2 text-gray-500">A carregar cursos...</p>
+      </div>
+
+      <!-- Cursos Futuros -->
+      <div class="reveal">
+        <h3 class="text-3xl font-bold mb-8 text-center" style="color: var(--text);">Em Breve</h3>
+        <div id="courses-list-soon" class="flex flex-wrap gap-6 justify-center">
+          <!-- Cards de cursos com status 'em_breve' -->
+           <p class="text-center w-full text-gray-500">A carregar futuros cursos...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sobre -->
+    <section id="sobre" class="section-alt container mx-auto px-6 py-20 md:py-28">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="reveal">
+          <h2 class="text-4xl md:text-5xl font-black mb-6" style="color: var(--text);">Excelência e Profissionalismo</h2>
+          <p class="text-lg mb-6" style="color: var(--text-muted);">O Programa Evereste Academy é uma iniciativa do Instituto Evereste que oferece experiências imersivas, conteúdos aplicados e uma abordagem voltada à prática. Unimos design moderno, tecnologia e didática para acelerar o desenvolvimento.</p>
+          <ul class="space-y-4">
+            <li class="flex gap-3"><i class="fa-solid fa-circle-check mt-1" style="color: var(--brand-teal);"></i><span style="color: var(--text);">Instrutores com experiência prática</span></li>
+            <li class="flex gap-3"><i class="fa-solid fa-circle-check mt-1" style="color: var(--brand-teal);"></i><span style="color: var(--text);">Conteúdo atualizado e relevante</span></li>
+            <li class="flex gap-3"><i class="fa-solid fa-circle-check mt-1" style="color: var(--brand-teal);"></i><span style="color: var(--text);">Foco em resultados e aplicabilidade</span></li>
+            <li class="flex gap-3"><i class="fa-solid fa-circle-check mt-1" style="color: var(--brand-teal);"></i><span style="color: var(--text);">Aprendizagem validada com check-in</span></li>
+          </ul>
+        </div>
+        <div class="reveal">
+          <div class="card-3d p-8">
+            <img src="https://i.postimg.cc/0NBrsPL3/treinamento-notion-01.jpg" alt="Equipa em treinamento" class="w-full h-auto rounded-lg" />
+            <p class="mt-6 text-center font-medium" style="color: var(--text-muted);">Uma iniciativa do Instituto Evereste para formações transformadoras.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t" style="border-color: var(--border); background: var(--surface);">
+      <div class="container mx-auto px-6 py-12">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="text-center md:text-left">
+            <p class="text-sm" style="color: var(--text-muted);">© 2025 Evereste Academy. Todos os direitos reservados.</p>
+            <a href="#" id="privacy-policy-link" class="text-sm text-blue-600 hover:underline">Política de Privacidade</a>
+          </div>
+          <div class="flex items-center gap-4">
+            <button id="adminBtnFooter" class="btn-ghost text-sm"><i class="fas fa-lock mr-2"></i>Acesso Admin</button>
+            <button id="logoutBtnFooter" class="btn-danger text-sm hidden"><i class="fas fa-right-from-bracket mr-2"></i>Logout</button>
+            <img src="https://i.postimg.cc/SKQh2j5n/logo-evereste-2025-horizontal-2.png" alt="Instituto Evereste" class="h-8 w-auto" />
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Course Detail View -->
+  <div id="course-detail-view" class="hidden">
+    <!-- O conteúdo dinâmico será injetado aqui pela função renderCourseDetail() -->
+    <p class="text-center p-20">A carregar detalhes do curso...</p>
+  </div>
+  
+  <!-- Admin Panel View -->
+  <div id="admin-panel-view" class="hidden">
+    <div id="admin-panel">
+      <!-- Navegação Lateral do Admin -->
+      <nav id="admin-nav" class="flex flex-col flex-shrink-0 p-6">
+        <div class="mb-10 px-4 pt-3">
+          <h2 class="text-2xl font-bold text-slate-800">Painel Admin</h2>
+        </div>
+        
+        <!-- RE-ADICIONADO: Link do Dashboard -->
+        <a href="#dashboard" class="admin-nav-link active" data-target="admin-dashboard">
+          <i class="fa-solid fa-chart-line"></i> Dashboard
+        </a>
+        
+        <a href="#cursos" class="admin-nav-link" data-target="admin-cursos"> <!-- 'active' removido daqui -->
+          <i class="fa-solid fa-graduation-cap"></i> Cursos
+        </a>
+        <a href="#matriculas" class="admin-nav-link" data-target="admin-matriculas">
+          <i class="fa-solid fa-users"></i> Matrículas
+        </a>
+        <a href="#instrutores" class="admin-nav-link" data-target="admin-instrutores">
+          <i class="fa-solid fa-chalkboard-user"></i> Instrutores
+        </a>
+        
+        <div class="mt-auto">
+          <a href="#" id="admin-logout-nav" class="admin-nav-link !border-transparent hover:!bg-red-100 hover:!text-red-700">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+          </a>
+          <p id="admin-user-email" class="text-xs text-center text-slate-500 mt-4 break-all"></p>
+        </div>
+      </nav>
+      
+      <!-- Conteúdo Principal do Admin -->
+      <main id="admin-content" class="p-10 overflow-y-auto">
+        
+        <!-- RE-ADICIONADO: Seção Dashboard -->
+        <section id="admin-dashboard" class="admin-section">
+          <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
+        
+          <!-- Cards de Estatísticas -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="card-3d !p-6">
+              <h3 class="text-sm font-semibold text-gray-500 uppercase">Total Matrículas</h3>
+              <p id="stats-total-enrollments" class="text-3xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="card-3d !p-6">
+              <h3 class="text-sm font-semibold text-gray-500 uppercase">Total Check-ins</h3>
+              <p id="stats-total-checkins" class="text-3xl font-bold text-teal-600">0</p>
+            </div>
+          </div>
+        
+          <!-- Gráficos -->
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div class="card-3d !p-6">
+              <h3 class="text-lg font-bold mb-4">Matrículas ao Longo do Tempo</h3>
+              <canvas id="enrollmentsChart" height="150"></canvas>
+            </div>
+            <div class="card-3d !p-6">
+              <h3 class="text-lg font-bold mb-4">Média de Avaliação (Instrutores)</h3>
+              <canvas id="ratingsChart" height="150"></canvas>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Seção Cursos -->
+        <section id="admin-cursos" class="admin-section hidden"> <!-- 'hidden' adicionado aqui -->
+          <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">Gestão de Cursos</h1>
+            <button id="admin-add-course-btn" class="btn-primary"><i class="fas fa-plus mr-2"></i>Adicionar Novo Curso</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Título</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                  <th>Avaliação</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="admin-courses-table-body">
+                <!-- Linhas de cursos -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+        <!-- Seção Matrículas -->
+        <section id="admin-matriculas" class="admin-section hidden">
+          <h1 class="text-3xl font-bold mb-8">Gestão de Matrículas</h1>
+          <div class="overflow-x-auto">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th>
+                  <th>Aluno</th>
+                  <th>E-mail</th>
+                  <th>Curso</th>
+                  <th>Data</th>
+                  <th>Setor</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="admin-enrollments-table-body">
+                <!-- Linhas de matrículas -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+        <!-- Seção Instrutores -->
+        <section id="admin-instrutores" class="admin-section hidden">
+          <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">Gestão de Instrutores</h1>
+            <button id="admin-add-instructor-btn" class="btn-primary"><i class="fas fa-plus mr-2"></i>Adicionar Instrutor</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Foto</th>
+                  <th>Nome</th>
+                  <th>Título</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="admin-instructors-table-body">
+                <!-- Linhas de instrutores -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+        <!-- Seção Configurações (Simplificada) -->
+        <section id="admin-config" class="admin-section hidden">
+          <h1 class="text-3xl font-bold mb-8">Configurações</h1>
+
+          <div class="card-3d !p-6 max-w-2xl mt-8">
+            <h3 class="text-lg font-bold mb-4">Popular Banco de Dados</h3>
+            <p class="text-sm text-gray-500 mb-6">Se o seu banco de dados estiver vazio, clique aqui para adicionar os dados iniciais dos cursos (Fotografia, IA) e dos instrutores. <strong class="text-red-600">Atenção:</strong> Isso pode sobrescrever dados existentes se os IDs forem iguais.</p>
+            <button id="populate-db-btn" class="btn-primary"><i class="fas fa-database mr-2"></i>Popular Dados Iniciais</button>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAIS (Estrutura HTML permanece a mesma) -->
+
+  <!-- Modal Login -->
+  <div id="modalLogin" class="modal-backdrop">
+    <div class="modal-card modal-card-sm p-8">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h3 class="text-2xl font-bold" style="color: var(--text);">Acesso Administrativo</h3>
+          <p class="text-sm" style="color: var(--text-muted);">Área restrita para gestores</p>
+        </div>
+        <button id="closeLogin" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="admin-label">E-mail</label>
+          <input id="loginEmail" type="email" class="admin-input" placeholder="admin@evereste.org" required />
+        </div>
+        <div>
+          <label class="admin-label">Senha</label>
+          <input id="loginPassword" type="password" class="admin-input" placeholder="••••••••" required />
+        </div>
+        <p id="loginError" class="text-red-600 text-sm hidden">Erro ao fazer login.</p>
+        <button type="submit" class="btn-primary w-full !py-3 !text-base"><i class="fa-solid fa-right-to-bracket mr-2"></i>Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Inscrição -->
+  <div id="modalEnroll" class="modal-backdrop">
+    <div class="modal-card modal-card-md p-8">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h3 class="text-2xl font-bold" style="color: var(--text);">Formulário de Inscrição</h3>
+          <p class="text-sm" style="color: var(--text-muted);">Inscreva-se no curso: <strong id="enrollCourseName" class="text-blue-600"></strong></p>
+        </div>
+        <button id="closeEnroll" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="enrollForm" class="space-y-4">
+        <div>
+          <label class="admin-label">Nome Completo</label>
+          <input id="enrollName" type="text" class="admin-input" placeholder="O seu nome" required />
+        </div>
+        <div>
+          <label class="admin-label">E-mail</label>
+          <input id="enrollEmail" type="email" class="admin-input" placeholder="voce@email.com" required />
+        </div>
+        <div>
+          <label class="admin-label">Telefone</label>
+          <input id="enrollPhone" type="tel" class="admin-input" placeholder="(00) 00000-0000" required />
+        </div>
+        <div>
+          <label class="admin-label">Setor</label>
+          <input id="enrollSector" type="text" class="admin-input" placeholder="Ex: Comunicação, Pedagógico..." required />
+        </div>
+
+        <!-- Termos e LGPD -->
+        <div class="space-y-3 pt-2">
+          <label class="flex items-start gap-3 cursor-pointer text-sm">
+            <input type="checkbox" id="enrollTermImage" class="mt-1 h-5 w-5 accent-blue-600" required />
+            <span class="text-gray-700">Eu concordo com o <a href="#" target="_blank" class="text-blue-600 underline">Termo de Uso de Imagem</a>.</span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer text-sm">
+            <input type="checkbox" id="enrollTermPrivacy" class="mt-1 h-5 w-5 accent-blue-600" required />
+            <span class="text-gray-700">Eu li e concordo com a <a href="#" target="_blank" class="text-blue-600 underline">Política de Privacidade (LGPD)</a>.</span>
+          </label>
+        </div>
+
+        <p id="enrollError" class="text-red-600 text-sm hidden">Erro ao processar inscrição. Tente novamente.</p>
+        <button type="submit" class="btn-primary w-full !py-3 !text-base">
+          <span id="enrollSubmitBtnText"><i class="fa-solid fa-paper-plane mr-2"></i>Confirmar Inscrição</span>
+          <span id="enrollSpinner" class="hidden"><i class="fas fa-spinner animate-spin mr-2"></i>A processar...</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Sucesso Inscrição (Protocolo) -->
+  <div id="modalEnrollSuccess" class="modal-backdrop">
+    <div class="modal-card modal-card-sm p-8 text-center">
+      <div class="text-center">
+        <i class="fas fa-check-circle text-6xl text-green-500 mb-6"></i>
+        <h3 class="text-2xl font-bold" style="color: var(--text);">Inscrição Confirmada!</h3>
+        <p class="text-base mt-2" style="color: var(--text-muted);">Guarde o seu número de protocolo:</p>
+        <p id="enrollProtocol" class="text-3xl font-bold text-blue-600 bg-blue-50 border-2 border-blue-200 rounded-lg py-4 my-4"></p>
+        <p class="text-sm" style="color: var(--text-muted);">Você receberá os detalhes da inscrição no seu e-mail.</p>
+      </div>
+      <button id="closeEnrollSuccess" class="btn-primary w-full mt-6">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Modal Check-in (SENHA FIXA) -->
+  <div id="modalCheckin" class="modal-backdrop">
+    <div class="modal-card modal-card-sm p-8">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h3 class="text-2xl font-bold" style="color: var(--text);">Check-in do Curso</h3>
+          <p class="text-sm" style="color: var(--text-muted);">Insira a senha fornecida pelo instrutor.</p>
+        </div>
+        <button id="closeCheckin" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="checkinForm" class="space-y-4">
+        <div>
+          <label class="admin-label">Senha de Acesso</label>
+          <input id="checkinPassword" type="password" class="admin-input" placeholder="••••••••" required />
+        </div>
+        <p id="checkinError" class="text-red-600 text-sm hidden">Senha incorreta. Tente novamente.</p>
+        <button type="submit" class="btn-primary w-full !py-3 !text-base">
+          <span id="checkinSubmitBtnText">Validar Check-in</span>
+          <span id="checkinSpinner" class="hidden"><i class="fas fa-spinner animate-spin mr-2"></i>A validar...</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Avaliar Instrutor -->
+  <div id="modalRating" class="modal-backdrop">
+    <div class="modal-card modal-card-sm p-8">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h3 class="text-2xl font-bold" style="color: var(--text);">Avaliar Instrutor</h3>
+          <p class="text-sm" style="color: var(--text-muted);">O seu feedback é importante para nós.</p>
+        </div>
+        <button id="closeRating" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="ratingForm" class="space-y-4">
+        <div>
+          <label class="admin-label">Selecione o Instrutor</label>
+          <select id="ratingInstructorSelect" class="admin-select" required>
+            <!-- Opções de instrutores -->
+          </select>
+        </div>
+        <div>
+          <label class="admin-label">A sua avaliação (1 a 5 estrelas)</label>
+          <div id="ratingStars" class="flex text-3xl text-gray-300 cursor-pointer">
+            <i class="fa-solid fa-star" data-value="1"></i>
+            <i class="fa-solid fa-star" data-value="2"></i>
+            <i class="fa-solid fa-star" data-value="3"></i>
+            <i class="fa-solid fa-star" data-value="4"></i>
+            <i class="fa-solid fa-star" data-value="5"></i>
+          </div>
+          <input type="hidden" id="ratingValue" value="0" required>
+        </div>
+         <div>
+          <label class="admin-label">Comentário (Opcional)</label>
+          <textarea id="ratingComment" class="admin-textarea" rows="3" placeholder="O que achou da didática?"></textarea>
+        </div>
+        <p id="ratingError" class="text-red-600 text-sm hidden">Erro ao enviar. Tente novamente.</p>
+        <button type="submit" class="btn-primary w-full !py-3 !text-base">
+          <span id="ratingSubmitBtnText">Enviar Avaliação</span>
+          <span id="ratingSpinner" class="hidden"><i class="fas fa-spinner animate-spin mr-2"></i>A enviar...</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Admin: Editar Curso -->
+  <div id="modalEditCourse" class="modal-backdrop">
+    <div class="modal-card modal-card-xl p-8">
+      <div class="flex items-start justify-between mb-6">
+        <h3 id="modalCourseTitle" class="text-2xl font-bold" style="color: var(--text);"></h3>
+        <button id="closeEditCourse" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <form id="courseForm" class="space-y-6">
+        <input type="hidden" id="courseId">
+        
+        <!-- Seção 1: Informações Básicas -->
+        <h4 class="text-lg font-bold text-gray-700 border-b pb-2">Informações Básicas</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="admin-label" for="courseTitle">Título</label>
+            <input class="admin-input" type="text" id="courseTitle" required>
+          </div>
+          <div>
+            <label class="admin-label" for="courseSubtitle">Subtítulo</label>
+            <input class="admin-input" type="text" id="courseSubtitle" required>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label class="admin-label" for="courseThemeColor">Cor (Hex)</label>
+            <input class="admin-input" type="text" id="courseThemeColor" placeholder="#FFC107" required>
+          </div>
+          <div>
+            <label class="admin-label" for="courseIcon">Ícone (FontAwesome)</label>
+            <input class="admin-input" type="text" id="courseIcon" placeholder="fa-camera-retro" required>
+          </div>
+          <div>
+            <label class="admin-label" for="courseStatus">Status</label>
+            <select id="courseStatus" class="admin-select" required>
+              <option value="aberto">Vagas Abertas</option>
+              <option value="em_breve">Em Breve</option>
+              <option value="fechado">Fechado (Oculto)</option>
+            </select>
+          </div>
+        </div>
+         <div>
+            <label class="admin-label" for="courseHeaderImage">URL Imagem Capa</label>
+            <input class="admin-input" type="text" id="courseHeaderImage" placeholder="https://url-da-imagem.com/capa.jpg" required>
+          </div>
+        
+        <!-- Seção 2: Descrições -->
+        <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Descrições</h4>
+        <div>
+          <label class="admin-label" for="courseSummary">Resumo (Card)</label>
+          <textarea class="admin-textarea" id="courseSummary" rows="2" required></textarea>
+        </div>
+        <div>
+          <label class="admin-label" for="courseFullDescription">Descrição Completa</label>
+          <textarea class="admin-textarea" id="courseFullDescription" rows="3" required></textarea>
+        </div>
+        <div>
+          <label class="admin-label" for="courseTargetAudience">Público-alvo</label>
+          <textarea class="admin-textarea" id="courseTargetAudience" rows="2" required></textarea>
+        </div>
+        
+        <!-- Seção 3: Construtores Dinâmicos (Substituindo JSON) -->
+        
+        <!-- Detalhes (Key-Value) -->
+        <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Detalhes (Data, Carga, etc.)</h4>
+        <div id="courseDetails-builder" class="space-y-3">
+          <!-- Campos de Detalhes (Key-Value) serão injetados aqui -->
+        </div>
+        <button type="button" id="addDetail-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Detalhe</button>
+
+        <!-- Objetivos (List) -->
+        <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Objetivos de Aprendizagem</h4>
+        <div id="courseObjectives-builder" class="space-y-3">
+          <!-- Campos de Objetivos (Lista) serão injetados aqui -->
+        </div>
+        <button type="button" id="addObjective-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Objetivo</button>
+
+        <!-- Requisitos (List) -->
+        <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Requisitos</h4>
+        <div id="courseRequirements-builder" class="space-y-3">
+          <!-- Campos de Requisitos (Lista) serão injetados aqui -->
+        </div>
+        <button type="button" id="addRequirement-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Requisito</button>
+
+        <!-- Atividades Práticas (Title-Description) -->
+        <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Atividades Práticas</h4>
+        <div id="courseActivities-builder" class="space-y-3">
+          <!-- Campos de Atividades (Title-Desc) serão injetados aqui -->
+        </div>
+        <button type="button" id="addActivity-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Atividade</button>
+        
+        <!-- Módulos (Title-Topics List) -->
+        <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Módulos do Curso</h4>
+        <div id="courseModules-builder" class="space-y-3">
+          <!-- Campos de Módulos (Title-Topics) serão injetados aqui -->
+        </div>
+        <button type="button" id="addModule-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Módulo</button>
+
+        
+        <!-- Seção 4: Configurações -->
+        <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Configurações</h4>
+        <!-- Instructors Selection -->
+        <div>
+          <label class="admin-label">Instrutores</label>
+          <div id="courseInstructorsList" class="checkbox-list">
+            <!-- Checkboxes de instrutores -->
+          </div>
+        </div>
+        
+        <!-- Liberação de Avaliação -->
+        <div>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" id="courseIsRatingEnabled" class="h-5 w-5 accent-blue-600" />
+            <span class="admin-label !mb-0">Liberar Avaliação do Curso?</span>
+          </label>
+          <p class="text-sm text-gray-500 mt-1">Se marcado, o botão "Avaliar Instrutor" aparecerá para alunos que fizeram check-in.</p>
+        </div>
+
+        <p id="courseFormError" class="text-red-600 text-sm hidden">Erro. Verifique os campos.</p>
+        
+        <div class="flex justify-end gap-4 pt-4 border-t mt-6">
+          <button type="button" id="courseFormCancel" class="btn-ghost">Cancelar</button>
+          <button type="submit" class="btn-primary">
+            <span id="courseSubmitBtnText">Salvar Curso</span>
+            <span id="courseFormSpinner" class="hidden"><i class="fas fa-spinner animate-spin mr-2"></i>A salvar...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Admin: Editar Instrutor -->
+  <div id="modalEditInstructor" class="modal-backdrop">
+    <div class="modal-card modal-card-lg p-8">
+      <div class="flex items-start justify-between mb-6">
+        <h3 id="modalInstructorTitle" class="text-2xl font-bold" style="color: var(--text);"></h3>
+        <button id="closeEditInstructor" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="instructorForm" class="space-y-6">
+        <input type="hidden" id="instructorId">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="admin-label" for="instructorName">Nome</label>
+            <input class="admin-input" type="text" id="instructorName" required>
+          </div>
+           <div>
+            <label class="admin-label" for="instructorTitle">Título</label>
+            <input class="admin-input" type="text" id="instructorTitle" placeholder="Ex: Supervisor de Marketing" required>
+          </div>
+        </div>
+        <div>
+            <label class="admin-label" for="instructorImage">URL da Foto</label>
+            <input class="admin-input" type="text" id="instructorImage" placeholder="https://url-da-foto.com/perfil.jpg" required>
+        </div>
+        <div>
+          <label class="admin-label" for="instructorBio">Biografia (Card)</label>
+          <textarea class="admin-textarea" id="instructorBio" rows="3" placeholder="Pequena descrição que aparece no card..."></textarea>
+        </div>
+        
+        <p id="instructorFormError" class="text-red-600 text-sm hidden">Erro. Verifique os campos.</p>
+        
+        <div class="flex justify-end gap-4 pt-4">
+          <button type="button" id="instructorFormCancel" class="btn-ghost">Cancelar</button>
+          <button type="submit" class="btn-primary">
+            <span id="instructorSubmitBtnText">Salvar Instrutor</span>
+            <span id="instructorFormSpinner" class="hidden"><i class="fas fa-spinner animate-spin mr-2"></i>A salvar...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Modal Confirmação de Exclusão -->
+  <div id="modalConfirmDelete" class="modal-backdrop">
+    <div class="modal-card modal-card-sm p-8 text-center">
+        <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-6"></i>
+        <h3 class="text-2xl font-bold" style="color: var(--text);">Tem a certeza?</h3>
+        <p class="text-base mt-2 mb-6" style="color: var(--text-muted);" id="modalConfirmMessage">Esta ação é irreversível.</p>
+        <div class="flex justify-center gap-4">
+          <button id="modalConfirmCancel" class="btn-ghost w-full">Cancelar</button>
+          <button id="modalConfirmDeleteBtn" class="btn-danger w-full">Sim, Excluir</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <!-- Script da Aplicação -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
+
