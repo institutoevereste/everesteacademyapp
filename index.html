@@ -53,18 +53,13 @@
         <div class="reveal max-w-3xl">
           <span class="badge mb-5" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;"><i class="fa-solid fa-bolt"></i> Inscrições Abertas</span>
           
-          <!-- MODIFICADO: Título animado (aplicando o Concept 3) -->
-          <!-- 1. Wrapper adicionado para conter a animação -->
+          <!-- ANIMAÇÃO "CONCEPT 3" APLICADA -->
           <div class="hero-title-animation-wrapper">
-            
-            <!-- 2. Zonas de hover invisíveis (têm de vir ANTES do h1) -->
-            <div class="hover-zone hover-top"></div>
-            <div class="hover-zone hover-bottom"></div>
-
-            <!-- 3. O H1 (sem as spans de letras individuais) -->
-            <h1 class="hero-animated-title text-5xl md:text-7xl font-black leading-tight" style="color: white;">
-              Evereste Academy
-            </h1>
+            <!-- Zonas de hover invisíveis -->
+            <div classax-w-2xl" class="hover-zone hover-zone-top"></div>
+            <div class="hover-zone hover-zone-bottom"></div>
+            <!-- Título -->
+            <h1 class="text-5xl md:text-7xl font-black leading-tight mb-4 hero-animated-title" style="color: white;">Evereste Academy</h1>
           </div>
           
           <p class="text-lg md:text-xl text-slate-200 max-w-2xl mb-8">Formações práticas e focadas em resultados para elevar a excelência do Instituto Evereste. Profissionalismo, dinamismo e tecnologia a favor do seu desenvolvimento.</p>
@@ -174,8 +169,7 @@
         <a href="#instrutores" class="admin-nav-link" data-target="admin-instrutores">
           <i class="fa-solid fa-chalkboard-user"></i> Instrutores
         </a>
-        
-        <!-- ADICIONADO LINK DE CONFIGURAÇÕES -->
+        <!-- ADICIONADO: Link de Configurações -->
         <a href="#config" class="admin-nav-link" data-target="admin-config">
           <i class="fa-solid fa-cog"></i> Configurações
         </a>
@@ -357,7 +351,54 @@
         </div>
         <div>
           <label class="admin-label">Setor</label>
-          <input id="enrollSector" type="text" class="admin-input" placeholder="Ex: Comunicação, Pedagógico..." required />
+          <!-- ATUALIZADO: Input com datalist -->
+          <input id="enrollSector" type="text" class="admin-input" placeholder="Digite ou selecione seu setor" list="sectores-list" required />
+          <datalist id="sectores-list">
+            <option value="Conselho de Administração">
+            <option value="Presidência">
+            <option value="Conselho Técnico-Científico">
+            <option value="Conselho Fiscal">
+            <option value="Comitê de Ética e Conduta">
+            <option value="Unidade de Ouvidoria Geral">
+            <option value="Diretoria Executiva de Governança e Controle">
+            <option value_name="Coordenadoria de Planejamento Estratégico">
+            <option value="Serviço de Conformidade e Prevenção de Riscos">
+            <option value="Serviço de Apoio Jurídico">
+            <option value="Supervisão de Gestão de Processos">
+            <option value="Secretaria Executiva">
+            <option value="Coordenadoria de Engenharia e de Socioeconomia">
+            <option value="Coordenadoria de Tecnologia da Informação e Comunicações">
+            <option value="Coordenadoria de Gestão Administrativa">
+            <option value="Secretaria-Geral da Presidência">
+            <option value="Unidade de Engenharia Civil e Arquitetura">
+            <option value="Unidade de Engenharia de Telecomunicações">
+            <option value="Serviço de Projetos e Orçamentos">
+            <option value="Serviço de Operação e Suporte">
+            <option value="Divisão de Desenvolvimento de Sistemas">
+            <option value="Supervisão de Desenvolvimento de Sistemas">
+            <option value="Divisão de Infraestrutura, Suporte de TIC e Segurança da Informação">
+            <option value="Supervisão de Atendimento e Suporte ao Usuário de TIC">
+            <option value="Supervisão de Gestão de Pessoas">
+            <option value="Serviço de Recrutamento e Seleção">
+            <option value="Supervisão de Gestão e Fiscalização de Contratos">
+            <option value="Supervisão de Conservação e Manutenção Predial e de Bens Móveis">
+            <option value="Supervisão Gestão de Contratos de Abastecimento">
+            <option value="Unidade de Aquisição de Bens e Serviços e de Pesquisa de Preços">
+            <option value="Unidade de Gestão de Licitações e Chamamentos">
+            <option value_name="Coordenadoria de Gestão Orçamentária e Financeira">
+            <option value="Coordenadoria de Relações Institucionais">
+            <option value="Coordenadores Executivo Bairro">
+            <option value="Supervisão de Execução Orçamentária e Financeira">
+            <option value="Supervisão de Marketing e Mídias Visuais">
+            <option value="Coordenadores Executivo Mirim">
+            <option value="Supervisão de Planejamento e Acompanhamento Orçamentário e Financeiro">
+            <option value="Unidade de Direção Socioambiental">
+            <option value="Coordenadores Executivo Bairro-Escola">
+            <option value="Serviço de Pagamento de Pessoal">
+            <option value="Unidade de Promoção de Eventos">
+            <option value="Coordenadores Executivo Itinerante">
+            <option value="Unidade de Jornalismo">
+          </datalist>
         </div>
 
         <!-- Termos e LGPD -->
@@ -497,7 +538,7 @@
             <select id="courseStatus" class="admin-select" required>
               <option value="aberto">Vagas Abertas</option>
               <option value="em_breve">Em Breve</option>
-              <option value."fechado">Fechado (Oculto)</option>
+              <option value="fechado">Fechado (Oculto)</option>
             </select>
           </div>
         </div>
