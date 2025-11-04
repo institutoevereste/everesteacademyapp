@@ -1,4 +1,97 @@
-// ... existing code ... -->
+// Importar funções do Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  signInAnonymously,
+  signInWithCustomToken
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  onSnapshot,
+  Timestamp,
+  writeBatch,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL,
+    deleteObject
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+// === CONFIGURAÇÃO E INICIALIZAÇÃO ===
+
+// Configuração do Firebase
+let firebaseConfig;
+let appId;
+
+// CORREÇÃO:
+// O 'appId' usado no caminho do Firestore deve ser o ID do seu projeto.
+// Na Vercel, as variáveis __app_id não existem, por isso definimos 'academylids'
+// como o padrão, baseado no ID do seu projeto.
+const CORRECT_APP_ID = 'academylids';
+
+try {
+  // Tenta usar as variáveis injetadas (vai falhar na Vercel, o que é esperado)
+  firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+  appId = typeof __app_id !== 'undefined' ? __app_id : CORRECT_APP_ID; // <-- CORRIGIDO
+
+  // Fallback (plano B) se as variáveis não forem injetadas
+  if (!firebaseConfig.apiKey) {
+    console.warn("Variáveis de ambiente não encontradas, usando fallback.");
+    firebaseConfig = {
+      apiKey: "AIzaSyB0xvVzytOx4dumokND-dr926krSO4-CqU",
+      authDomain: "academylids.firebaseapp.com",
+      projectId: "academylids",
+      storageBucket: "academylids.firebasestorage.app",
+      messagingSenderId: "826478835273",
+      appId: "1:826478835273:web:0995d64419276b932cb198",
+      measurementId: "G-T2TN7FL590"
+    };
+    appId = CORRECT_APP_ID; // <-- CORRIGIDO
+  }
+
+} catch (e) {
+  console.error("Erro ao parsear configuração do Firebase:", e);
+  // Fallback crítico em caso de erro de parse
+  firebaseConfig = {
+    apiKey: "AIzaSyB0xvVzytOx4dumokND-dr926krSO4-CqU",
+    authDomain: "academylids.firebaseapp.com",
+    projectId: "academylids",
+    storageBucket: "academylids.firebasestorage.app",
+    messagingSenderId: "826478835273",
+    appId: "1:826478835273:web:0995d64419276b932cb198",
+    measurementId: "G-T2TN7FL590"
+  };
+  appId = CORRECT_APP_ID; // <-- CORRIGIDO
+}
+
+
+// Inicializar Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+// setLogLevel('debug');
+
+// Estado da Aplicação
+let currentUser = null;
+let isAdmin = false;
+let localCourses = []; // Cache local de cursos
 let localInstructors = []; // Cache local de instrutores
 let userCheckins = {}; // Cache de check-ins do usuário
 let currentCourseId = null; // ID do curso na página de detalhes
@@ -8,6 +101,7 @@ let enrollmentsChartInstance = null;
 let ratingsChartInstance = null;
 
 // Referências de Coleções (Baseado nas Regras)
+// O 'appId' corrigido será usado aqui
 const coursesCollection = collection(db, `artifacts/${appId}/public/data/courses`);
 const instructorsCollection = collection(db, `artifacts/${appId}/public/data/instructors`);
 const enrollmentsCollection = collection(db, `artifacts/${appId}/public/data/enrollments`);
@@ -71,17 +165,19 @@ function showView(viewName) {
   if (viewName === 'main') {
     mainView.classList.remove('hidden');
     window.scrollTo(0, 0);
-// ... existing code ... -->
+  } else if (viewName === 'detail') {
+    courseDetailView.classList.remove('hidden');
+    window.scrollTo(0, 0);
   } else if (viewName === 'admin') {
     if (isAdmin) {
       adminPanelView.classList.remove('hidden');
       
-      // *** ALTERADO: Carregar dados da aba "Dashboard" como padrão ***
+      // Carregar dados da aba "Dashboard" como padrão
       loadAdminDashboardData(); 
       renderEnrollmentsChart();
       renderRatingsChart();
       
-      // *** ALTERADO: Resetar para a aba "Dashboard" ***
+      // Resetar para a aba "Dashboard"
       document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
       document.querySelector('.admin-nav-link[data-target="admin-dashboard"]').classList.add('active');
       document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
@@ -90,9 +186,97 @@ function showView(viewName) {
       window.scrollTo(0, 0);
     } else {
       // Se não for admin, volta para a main e abre o login
-// ... existing code ... -->
-  e.preventDefault();
-  handleLogout();
+      mainView.classList.remove('hidden');
+      _openModal(modalLogin);
+    }
+  }
+}
+
+// Função para mostrar notificações (toast)
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
+  toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
+  
+  toast.innerHTML = `
+    <i class="fas ${iconClass} icon"></i>
+    <span class="toast-message">${message}</span>
+    <button class="toast-close">&times;</button>
+  `;
+  
+  container.appendChild(toast);
+  
+  // Animação de entrada
+  setTimeout(() => toast.classList.add('show'), 100);
+  
+  // Fechar
+  const closeBtn = toast.querySelector('.toast-close');
+  const closeToast = () => {
+    toast.classList.remove('show');
+    // Remover da DOM após a animação
+    setTimeout(() => toast.remove(), 500);
+  };
+  
+  closeBtn.onclick = closeToast;
+  // Fechar automaticamente
+  setTimeout(closeToast, 5000);
+}
+
+// === AUTENTICAÇÃO ===
+
+onAuthStateChanged(auth, async (user) => {
+  // Tentativa de login com Custom Token (se injetado)
+  if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !auth.currentUser) {
+      try {
+          console.log("A tentar login com Custom Token...");
+          await signInWithCustomToken(auth, __initial_auth_token);
+          return;
+      } catch (error) {
+          console.error("Erro no login com Custom Token:", error);
+      }
+  }
+  
+  if (user) {
+    // Usuário está logado
+    currentUser = user;
+    
+    if (user.isAnonymous) {
+      console.log("Usuário logado anonimamente:", user.uid);
+      isAdmin = false;
+      setAdminUI(false);
+    } else {
+      console.log("Usuário logado:", user.email);
+      await checkAdminStatus(user.uid);
+      setAdminUI(isAdmin);
+      if (isAdmin) {
+        loadAdminDashboardData();
+        renderEnrollmentsChart();
+        renderRatingsChart();
+      }
+    }
+    
+    // Carregar dados públicos
+    loadCourses();
+    loadInstructors();
+    
+    // Carregar dados privados do usuário
+    loadUserCheckins(user.uid);
+    
+  } else {
+    // Usuário está deslogado
+    console.log("Nenhum usuário logado. A tentar login anônimo...");
+    currentUser = null;
+    isAdmin = false;
+    setAdminUI(false);
+    
+    try {
+      await signInAnonymously(auth);
+    } catch (error) {
+      console.error("Erro no login anônimo:", error);
+      showToast("Não foi possível conectar. Verifique a sua rede.", "error");
+    }
+  }
 });
 
 // RE-ADICIONADO: Funções do Dashboard
@@ -278,37 +462,6 @@ async function renderRatingsChart() {
   }
 }
 
-// === CARREGAMENTO DE DADOS PÚBLICOS ===
-// ... existing code ... -->
-// ... existing code ... -->
-    document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(link.dataset.target).classList.remove('hidden');
-    
-    // Carregar dados da seção
-    switch(link.dataset.target) {
-      // RE-ADICIONADO: case 'admin-dashboard'
-      case 'admin-dashboard':
-        destroyCharts(); // Limpa gráficos de outras abas (se houver no futuro)
-        loadAdminDashboardData();
-        renderEnrollmentsChart();
-        renderRatingsChart();
-        break;
-      case 'admin-cursos': 
-        destroyCharts(); // Limpa gráficos do dashboard
-        loadAdminCourses(); 
-        break;
-      case 'admin-matriculas': 
-        destroyCharts(); // Limpa gráficos do dashboard
-        loadAdminEnrollments(); 
-        break;
-      case 'admin-instrutores': 
-        destroyCharts(); // Limpa gráficos do dashboard
-        loadAdminInstructors(); 
-        break;
-    }
-  }
-});
-
 // Função de verificação de Admin
 async function checkAdminStatus(uid) {
   try {
@@ -317,7 +470,6 @@ async function checkAdminStatus(uid) {
     isAdmin = adminDoc.exists();
     console.log(`Status de Admin para ${uid}: ${isAdmin}`);
   } catch (error) {
-    // MUDANÇA: Tratar erro de permissão como "não-admin" sem poluir a consola
     if (error.code === 'permission-denied' || (error.message && error.message.includes('Missing or insufficient permissions'))) {
       console.log("Verificação de admin falhou (permissões), assumindo não-admin.");
     } else {
@@ -337,9 +489,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   try {
     errorEl.classList.add('hidden');
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    // Sucesso, o onAuthStateChanged vai tratar o resto
     _closeModal(modalLogin);
-    showView('admin'); // Força a ida ao admin
+    showView('admin');
     showToast(`Bem-vindo, ${userCredential.user.email}!`, 'success');
   } catch (error) {
     console.error("Erro de login:", error.code, error.message);
@@ -358,7 +509,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 async function handleLogout() {
   try {
     await signOut(auth);
-    // Sucesso, o onAuthStateChanged vai tratar o login anônimo
     showView('main');
     showToast("Logout realizado com sucesso.", 'success');
   } catch (error) {
@@ -392,7 +542,7 @@ async function loadCourses() {
       if (course) {
         renderCourseDetail(course);
       } else {
-        showView('main'); // Curso não existe mais
+        showView('main');
       }
     }
     
@@ -881,16 +1031,27 @@ document.getElementById('admin-nav').addEventListener('click', (e) => {
     
     // Carregar dados da seção
     switch(link.dataset.target) {
-      // REMOVIDO: case 'admin-dashboard'
-      case 'admin-cursos': loadAdminCourses(); break;
-      case 'admin-matriculas': loadAdminEnrollments(); break;
-      case 'admin-instrutores': loadAdminInstructors(); break;
+      case 'admin-dashboard':
+        destroyCharts();
+        loadAdminDashboardData();
+        renderEnrollmentsChart();
+        renderRatingsChart();
+        break;
+      case 'admin-cursos': 
+        destroyCharts();
+        loadAdminCourses(); 
+        break;
+      case 'admin-matriculas': 
+        destroyCharts();
+        loadAdminEnrollments(); 
+        break;
+      case 'admin-instrutores': 
+        destroyCharts();
+        loadAdminInstructors(); 
+        break;
     }
   }
 });
-
-// REMOVIDO: loadAdminDashboardData()
-// REMOVIDO: renderEnrollmentsChart()
 
 // Carregar Cursos (Admin)
 async function loadAdminCourses() {
@@ -911,7 +1072,7 @@ async function loadAdminCourses() {
   }
   
   tableBody.innerHTML = visibleCourses.map(course => {
-    let statusClass = 'bg-yellow-100 text-yellow-700'; // Default 'em_breve'
+    let statusClass = 'bg-yellow-100 text-yellow-700';
     if (course.status === 'aberto') statusClass = 'bg-green-100 text-green-700';
 
     const courseDate = course.details && course.details.Data ? course.details.Data : 'N/A';
@@ -1463,13 +1624,13 @@ document.getElementById('admin-panel-view').addEventListener('click', async (e) 
         loadAdminInstructors();
       });
       break;
-// ... existing code ... -->
+    
     case 'delete-enrollment':
       openConfirmModal(`Tem a certeza que quer excluir esta matrícula ("${id}")?`, async () => {
         await deleteDoc(doc(enrollmentsCollection, id));
         showToast("Matrícula excluída com sucesso.", "success");
         loadAdminEnrollments();
-        loadAdminDashboardData(); // RE-ADICIONADO: Atualiza contagem
+        loadAdminDashboardData();
       });
       break;
   }
@@ -1684,6 +1845,4 @@ document.getElementById('privacy-policy-link').addEventListener('click', (e) => 
   e.preventDefault();
   showToast("Página de Política de Privacidade ainda não implementada.", "error");
 });
-
-// REMOVIDO: Carregamento inicial do gráfico
 
