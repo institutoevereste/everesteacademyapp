@@ -14,7 +14,7 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- RE-ADICIONADO: Chart.js (necessário para os gráficos) -->
+  <!-- Chart.js (necessário para os gráficos) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <!-- Folha de Estilo Personalizada -->
@@ -56,7 +56,7 @@
           <!-- ANIMAÇÃO "CONCEPT 3" APLICADA -->
           <div class="hero-title-animation-wrapper">
             <!-- Zonas de hover invisíveis -->
-            <div classax-w-2xl" class="hover-zone hover-zone-top"></div>
+            <div class="hover-zone hover-zone-top"></div>
             <div class="hover-zone hover-zone-bottom"></div>
             <!-- Título -->
             <h1 class="text-5xl md:text-7xl font-black leading-tight mb-4 hero-animated-title" style="color: white;">Evereste Academy</h1>
@@ -299,7 +299,7 @@
     </div>
   </div>
 
-  <!-- MODAIS (Estrutura HTML permanece a mesma) -->
+  <!-- MODAIS -->
 
   <!-- Modal Login -->
   <div id="modalLogin" class="modal-backdrop">
@@ -361,7 +361,7 @@
             <option value="Comitê de Ética e Conduta">
             <option value="Unidade de Ouvidoria Geral">
             <option value="Diretoria Executiva de Governança e Controle">
-            <option value_name="Coordenadoria de Planejamento Estratégico">
+            <option value="Coordenadoria de Planejamento Estratégico">
             <option value="Serviço de Conformidade e Prevenção de Riscos">
             <option value="Serviço de Apoio Jurídico">
             <option value="Supervisão de Gestão de Processos">
@@ -385,7 +385,7 @@
             <option value="Supervisão Gestão de Contratos de Abastecimento">
             <option value="Unidade de Aquisição de Bens e Serviços e de Pesquisa de Preços">
             <option value="Unidade de Gestão de Licitações e Chamamentos">
-            <option value_name="Coordenadoria de Gestão Orçamentária e Financeira">
+            <option value="Coordenadoria de Gestão Orçamentária e Financeira">
             <option value="Coordenadoria de Relações Institucionais">
             <option value="Coordenadores Executivo Bairro">
             <option value="Supervisão de Execução Orçamentária e Financeira">
@@ -405,11 +405,11 @@
         <div class="space-y-3 pt-2">
           <label class="flex items-start gap-3 cursor-pointer text-sm">
             <input type="checkbox" id="enrollTermImage" class="mt-1 h-5 w-5 accent-blue-600" required />
-            <span class="text-gray-700">Eu concordo com o <a href="#" target="_blank" class="text-blue-600 underline">Termo de Uso de Imagem</a>.</span>
+            <span class="text-gray-700">Eu concordo com o Termo de Uso de Imagem.</span>
           </label>
           <label class="flex items-start gap-3 cursor-pointer text-sm">
             <input type="checkbox" id="enrollTermPrivacy" class="mt-1 h-5 w-5 accent-blue-600" required />
-            <span class="text-gray-700">Eu li e concordo com a <a href="#" target="_blank" class="text-blue-600 underline">Política de Privacidade (LGPD)</a>.</span>
+            <span class="text-gray-700">Eu li e concordo com a <a href="#" id="open-privacy-enroll" class="text-blue-600 underline">Política de Privacidade (LGPD)</a>.</span>
           </label>
         </div>
 
@@ -685,6 +685,147 @@
         </div>
     </div>
   </div>
+
+  <!-- ADICIONADO: Modal de Política de Privacidade -->
+  <div id="modalPrivacyPolicy" class="modal-backdrop">
+    <div class="modal-card modal-card-xl p-8">
+      <div class="flex items-start justify-between mb-4">
+        <h3 class="text-2xl font-bold" style="color: var(--text);">Termo de Privacidade</h3>
+        <button id="closePrivacy" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <!-- Conteúdo do PDF formatado -->
+      <div class="prose max-w-none text-gray-700" style="max-height: 70vh; overflow-y: auto; padding-right: 1rem;">
+        <h4 class="font-bold text-lg">CAPÍTULO I: INTRODUÇÃO</h4>
+        <p>Neste Termo de Uso, o VISITANTE (titular dos dados) do serviço portal do EVERESTE encontrará informações sobre:</p>
+        <ol class="list-decimal list-inside ml-4">
+          <li>O funcionamento do serviço e as regras aplicáveis a ele;</li>
+          <li>O conjunto de regras relacionadas à prestação do serviço;</li>
+          <li>As responsabilidades do usuário do site ao utilizar o serviço;</li>
+          <li>As responsabilidades da administração pública ao fornecer o serviço;</li>
+          <li>Informações para contato, caso necessário atualização de informações ou esclarecimento de dúvidas;</li>
+          <li>Autoridade responsável por eventuais reclamações caso questões deste Termo de Uso tenham sido violadas.</li>
+        </ol>
+        <p>Além disso, no Aviso de Privacidade, o usuário do serviço do portal do EVERESTE encontrará informações sobre:</p>
+        <ul class="list-disc list-inside ml-4">
+          <li>Qual o tratamento dos dados pessoais realizados e a sua finalidade;</li>
+          <li>Os dados pessoais dos usuários necessários para a prestação deste serviço;</li>
+          <li>A forma como os dados são coletados;</li>
+          <li>Informações sobre compartilhamento de dados com terceiros;</li>
+          <li>Quais medidas de segurança são utilizadas para proteger os dados pessoais.</li>
+        </ul>
+        <p>Nas informações sobre Cookies, o usuário do serviço do portal encontrará detalhes sobre:</p>
+        <ul class="list-disc list-inside ml-4">
+          <li>Cookies próprios (primários) e de terceiros;</li>
+          <li>Cookies utilizados para uso de redes sociais;</li>
+          <li>Configuração de Cookies no navegador.</li>
+        </ul>
+
+        <h4 class="font-bold text-lg mt-6">CAPÍTULO II: ACEITAÇÃO DOS TERMOS</h4>
+        <p>Ao utilizar os serviços, o usuário confirma que leu e compreendeu os Termos e Políticas aplicáveis ao serviço do portal do EVERESTE e concorda em ficar vinculado a eles.</p>
+        <p>São aplicáveis a esse serviço as seguintes leis e normativos:</p>
+        <ul class="list-disc list-inside ml-4">
+          <li>Lei nº 12.965, de 23 de abril de 2014 (Marco Civil da Internet);</li>
+          <li>Lei nº 13.460, de 26 de junho de 2017 (Direitos do usuário dos serviços públicos);</li>
+          <li>Lei nº 13.709, de 14 de agosto de 2018 (Lei Geral de Proteção de Dados Pessoais - LGPD);</li>
+          <li>Decreto nº 9.637, de 26 de dezembro de 2018 (Política Nacional de Segurança da Informação).</li>
+        </ul>
+
+        <h4 class="font-bold text-lg mt-6">CAPÍTULO III: DAS OBRIGAÇÕES DOS VISITANTES</h4>
+        <p>O usuário se responsabiliza pela clareza e transparência dos dados informados e reconhece que a imprecisão destes poderá causar a impossibilidade de se utilizar o serviço portal do EVERESTE.</p>
+        <p>Durante a utilização do serviço, a fim de preservar e proteger os direitos de terceiros, o usuário se compromete em fornecer somente seus dados pessoais, e não os de terceiros.</p>
+        <p>O acesso (login) e senha só poderão ser utilizados pelo VISITANTE cadastrado. Ele se compromete a manter em sigilo sua senha, sendo esta pessoal e intransferível, não sendo possível, em qualquer hipótese, a alegação de uso indevido, após o ato de compartilhamento.</p>
+        <p>O VISITANTE é responsável pela atualização das suas informações pessoais e consequências no descuido ou erros nas informações pessoais cadastradas.</p>
+        <p>O VISITANTE é responsável pela reparação de todos e quaisquer danos, diretos ou indiretos que sejam causados à cúpula administrativa da instituição, a qualquer outro Usuário, ou, ainda, a qualquer terceiro, inclusive no ato do descumprimento do estabelecido nestes Termos de Uso.</p>
+        <p>O Órgão não poderá ser responsabilizado pelos seguintes fatos:</p>
+        <ul class="list-disc list-inside ml-4">
+          <li>Equipamento danificado no momento do consumo de serviços;</li>
+          <li>Proteção do computador;</li>
+          <li>Equipamento infectado ou invadido por atacantes;</li>
+          <li>Proteção das informações baseadas nos computadores dos usuários;</li>
+          <li>Abuso de uso dos computadores dos usuários;</li>
+          <li>Monitoração ilegal do computador dos usuários;</li>
+          <li>Vulnerabilidades ou instabilidades existentes nos sistemas dos usuários;</li>
+          <li>Perímetro inseguro.</li>
+        </ul>
+
+        <h4 class="font-bold text-lg mt-6">CAPÍTULO IV: AVISO de PRIVACIDADE</h4>
+        <p>Privacidade e segurança são prioridades para o portal do EVERESTE, que tem comprometimento com a transparência do tratamento de dados pessoais de seus VISITANTES (titular dos dados). Por isso, este Aviso de Privacidade estabelece como é realizado o tratamento de dados dos usuários que acessam o Portal.</p>
+        
+        <h5 class="font-bold text-md mt-4">4.1. DAS FINALIDADES DOS DADOS COLETADOS</h5>
+        <p>O portal do EVERESTE coleta dados pessoais por meio de cookies através do navegador de internet (browser). Os dados são tratados com a finalidade de simplificar as solicitações, a prestação e o acompanhamento dos serviços públicos, com foco na experiência do usuário.</p>
+        <p>Para a finalidade acima descrita, o portal realiza o tratamento dos seguintes dados pessoais, por meio de cookies:</p>
+        <ul class="list-disc list-inside ml-4">
+          <li>Identificação de dispositivo na internet (endereço IP anonimizado);</li>
+          <li>Endereço virtual de página da internet (registros de pesquisas, inclusive em outros sites visitados);</li>
+          <li>País, estado e cidade (localização geral);</li>
+          <li>Faixa etária;</li>
+          <li>Sexo biológico;</li>
+          <li>Dados do dispositivo (modelo de hardware, sistema operacional).</li>
+        </ul>
+        <p>Em conformidade com a Lei Geral de Proteção de Dados, o tratamento de dados pessoais será realizado utilizando como base legal: "art. 7º, I - mediante o fornecimento de consentimento pelo titular;"</p>
+
+        <h5 class="font-bold text-md mt-4">4.2. DIREITOS DO VISITANTE</h5>
+        <p>O portal do EVERESTE assegura a seus usuários seus direitos de titular dos dados pessoais previstos na LGPD da instituição. Dessa forma, é possível, de maneira gratuita e a qualquer momento:</p>
+        <ul class="list-disc list-inside ml-4">
+          <li>Se opor ao tratamento de dados pessoais a qualquer momento.</li>
+          <li>Confirmar a existência de tratamento de dados pessoais.</li>
+          <li>Acessar seus dados pessoais.</li>
+          <li>Corrigir seus dados pessoais.</li>
+          <li>Limitar seus dados pessoais quando desnecessários, excessivos ou tratados em desconformidade.</li>
+          <li>Solicitar a portabilidade de seus dados pessoais.</li>
+          <li>Eliminar seus dados pessoais, tratados a partir de seu consentimento.</li>
+          <li>Revogar seu consentimento, desautorizando o tratamento de seus dados.</li>
+        </ul>
+
+        <h5 class="font-bold text-md mt-4">4.3. PERÍODO DE ARMAZENAMENTO</h5>
+        <p>Os dados pessoais coletados através do portal do EVERESTE serão utilizados e armazenados durante o tempo necessário para a prestação do serviço ou para que as finalidades listadas neste Aviso de Privacidade sejam atingidas, considerando os direitos dos VISITANTES e dos responsáveis pelo tratamento de dados.</p>
+        <p>De modo geral, os dados serão mantidos enquanto relevantes. Após o período, estes serão excluídos de nossas bases de dados ou anonimizados.</p>
+
+        <h5 class="font-bold text-md mt-4">4.4. DA SEGURANÇA DE TRABALHO</h5>
+        <p>Para manter os dados pessoais protegidos, são usadas ferramentas físicas, eletrônicas e gerenciais direcionadas para a proteção e privacidade. O portal do EVERESTE se compromete a utilizar as melhores práticas para evitar incidentes de segurança.</p>
+        <p>Contudo, é necessário destacar que nenhuma página virtual é inteiramente segura e livre de riscos. É possível que, apesar de todos os protocolos de segurança, problemas de culpa exclusiva de terceiros ocorram, como ataques cibernéticos ou também em decorrência do descaso ou descuido do próprio usuário.</p>
+
+        <h5 class="font-bold text-md mt-4">4.5. DO COMPARTILHAMENTO DE DADOS</h5>
+        <p>Tendo em vista a preservação da privacidade, o portal do EVERESTE não compartilhará dados pessoais com nenhum terceiro não autorizado. Os operadores listados a seguir realizam o tratamento de dados pessoais em nome do responsável pelo tratamento (controlador), respeitando a devida LGPD da instituição.</p>
+        <ul class="list-disc list-inside ml-4">
+          <li>Determinação legal, requerimento, requisição ou ordem judicial, com autoridades judiciais, administrativas ou governamentais competentes.</li>
+          <li>Proteção dos direitos do portal do EVERESTE em qualquer tipo de conflito, inclusive os de teor judicial.</li>
+        </ul>
+
+        <h5 class="font-bold text-md mt-4">4.6. ATUALIZAÇÃO DO AVISO</h5>
+        <p>A presente versão deste Aviso de Privacidade foi atualizada pela última vez em 23 de fevereiro de 2024.</p>
+        <p>O editor se reserva o direito de modificar, a qualquer momento, as presentes normas, especialmente para adaptá-las às melhorias do serviço do portal do EVERESTE.</p>
+        
+        <h5 class="font-bold text-md mt-4">4.7. RESPONSABILIDADE</h5>
+        <p>O portal do EVERESTE prevê a responsabilidade dos agentes que atuam nos processos de tratamento de dados, em conformidade com a LGPD. E se compromete em manter este Aviso de Privacidade atualizado, observando suas determinações e zelando por seu cumprimento.</p>
+        <p>O portal do EVERESTE não se responsabiliza por:</p>
+        <ul class="list-disc list-inside ml-4">
+          <li>Quaisquer consequências decorrentes do descaso ou descuido dos usuários em relação a seus dados individuais.</li>
+          <li>Ações maliciosas de terceiros, como ataques cibernéticos, exceto se comprovada conduta culposa ou deliberada do portal do EVERESTE.</li>
+          <li>Inveracidade das informações inseridas pelo usuário.</li>
+        </ul>
+
+        <h4 class="font-bold text-lg mt-6">CAPÍTULO V: COOKIES</h4>
+        <p>O portal do EVERESTE utiliza cookies próprios (primários), ou seja, do domínio evereste.org.br, para registrar as configurações e preferências de navegação dos usuários e gerar relatórios estatísticos através do Google Analytics, e também cookies de terceiros para complementar essas estatísticas.</p>
+        
+        <h5 class="font-bold text-md mt-4">5.1. COOKIES DE TERCEIROS</h5>
+        <p>O portal do EVERESTE depende dos serviços fornecidos por terceiros. Os cookies de terceiros, no portal do EVERESTE, são todos cookies de publicidade e multimídia da Google. O Google Analytics no portal do EVERESTE tem recursos de relatórios de publicidade ativados.</p>
+        <p>Domínios: Google, Youtube, Doubleclick.net</p>
+
+        <h5 class="font-bold text-md mt-4">5.2. COOKIES DE CANAIS DIGITAIS</h5>
+        <p>O portal do EVERESTE incorpora vídeos e outros arquivos de mídias provenientes do Facebook, Youtube e Google.</p>
+
+        <h5 class="font-bold text-md mt-4">5.3. CONFIGURAÇÕES DE COOKIES NO NAVEGADOR</h5>
+        <p>O usuário pode alterar as permissões a qualquer momento, bloquear ou recusar os Cookies, com exceção dos estritamente necessários. Todavia, a revogação do consentimento de determinados Cookies pode prejudicar o correto funcionamento de alguns recursos do portal do EVERESTE.</p>
+      </div>
+
+      <div class="flex justify-end gap-4 pt-4 border-t mt-6">
+        <button type="button" id="closePrivacyBtn" class="btn-primary">Fechar</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- SCRIPTS -->
   <!-- Script da Aplicação -->
