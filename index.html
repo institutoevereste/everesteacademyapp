@@ -53,14 +53,17 @@
         <div class="reveal max-w-3xl">
           <span class="badge mb-5" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;"><i class="fa-solid fa-bolt"></i> Inscrições Abertas</span>
           
-          <!-- ANIMAÇÃO "CONCEPT 3" APLICADA -->
+          <!-- INÍCIO: Animação "Concept 3" do Título -->
           <div class="hero-title-animation-wrapper">
             <!-- Zonas de hover invisíveis -->
-            <div class="hover-zone hover-zone-top"></div>
-            <div class="hover-zone hover-zone-bottom"></div>
-            <!-- Título -->
-            <h1 class="text-5xl md:text-7xl font-black leading-tight mb-4 hero-animated-title" style="color: white;">Evereste Academy</h1>
+            <div class="hover-zone top"></div>
+            <div class="hover-zone bottom"></div>
+            <!-- O Título -->
+            <h1 class="text-5xl md:text-7xl font-black leading-tight mb-4 hero-animated-title" style="color: white;">
+              Evereste Academy
+            </h1>
           </div>
+          <!-- FIM: Animação "Concept 3" do Título -->
           
           <p class="text-lg md:text-xl text-slate-200 max-w-2xl mb-8">Formações práticas e focadas em resultados para elevar a excelência do Instituto Evereste. Profissionalismo, dinamismo e tecnologia a favor do seu desenvolvimento.</p>
           <div class="flex items-center gap-4 flex-wrap">
@@ -128,6 +131,7 @@
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="text-center md:text-left">
             <p class="text-sm" style="color: var(--text-muted);">© 2025 Evereste Academy. Todos os direitos reservados.</p>
+            <!-- ATUALIZADO: Link da Política de Privacidade -->
             <a href="#" id="privacy-policy-link" class="text-sm text-blue-600 hover:underline">Política de Privacidade</a>
           </div>
           <div class="flex items-center gap-4">
@@ -138,8 +142,7 @@
         </div>
       </div>
     </footer>
-    
-  </div> <!-- <<<<<<< ESTA ERA A LINHA QUE FALTAVA (CORRIGIDA) -->
+  </div> <!-- FIM DA <div id="main-view"> -->
 
   <!-- Course Detail View -->
   <div id="course-detail-view" class="hidden">
@@ -156,12 +159,12 @@
           <h2 class="text-2xl font-bold text-slate-800">Painel Admin</h2>
         </div>
         
-        <!-- RE-ADICIONADO: Link do Dashboard -->
+        <!-- Link do Dashboard -->
         <a href="#dashboard" class="admin-nav-link active" data-target="admin-dashboard">
           <i class="fa-solid fa-chart-line"></i> Dashboard
         </a>
         
-        <a href="#cursos" class="admin-nav-link" data-target="admin-cursos"> <!-- 'active' removido daqui -->
+        <a href="#cursos" class="admin-nav-link" data-target="admin-cursos">
           <i class="fa-solid fa-graduation-cap"></i> Cursos
         </a>
         <a href="#matriculas" class="admin-nav-link" data-target="admin-matriculas">
@@ -170,6 +173,7 @@
         <a href="#instrutores" class="admin-nav-link" data-target="admin-instrutores">
           <i class="fa-solid fa-chalkboard-user"></i> Instrutores
         </a>
+        
         <!-- ADICIONADO: Link de Configurações -->
         <a href="#config" class="admin-nav-link" data-target="admin-config">
           <i class="fa-solid fa-cog"></i> Configurações
@@ -186,7 +190,7 @@
       <!-- Conteúdo Principal do Admin -->
       <main id="admin-content" class="p-10 overflow-y-auto">
         
-        <!-- RE-ADICIONADO: Seção Dashboard -->
+        <!-- Seção Dashboard -->
         <section id="admin-dashboard" class="admin-section">
           <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
         
@@ -216,7 +220,7 @@
         </section>
         
         <!-- Seção Cursos -->
-        <section id="admin-cursos" class="admin-section hidden"> <!-- 'hidden' adicionado aqui -->
+        <section id="admin-cursos" class="admin-section hidden">
           <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold">Gestão de Cursos</h1>
             <button id="admin-add-course-btn" class="btn-primary"><i class="fas fa-plus mr-2"></i>Adicionar Novo Curso</button>
@@ -285,13 +289,13 @@
           </div>
         </section>
         
-        <!-- Seção Configurações (Simplificada) -->
+        <!-- Seção Configurações -->
         <section id="admin-config" class="admin-section hidden">
           <h1 class="text-3xl font-bold mb-8">Configurações</h1>
 
           <div class="card-3d !p-6 max-w-2xl mt-8">
             <h3 class="text-lg font-bold mb-4">Popular Banco de Dados</h3>
-            <p class="text-sm text-gray-500 mb-6">Se o seu banco de dados estiver vazio, clique aqui para adicionar os dados iniciais dos cursos (Fotografia, IA) e dos instrutores. <strong class="text-red-600">Atenção:</strong> Isso pode sobrescrever dados existentes se os IDs forem iguais.</p>
+            <p class="text-sm text-gray-500 mb-6">Se o seu banco de dados estiver vazio, clique aqui para adicionar os dados iniciais dos cursos e instrutores. <strong class="text-red-600">Atenção:</strong> Isso pode sobrescrever dados existentes se os IDs forem iguais.</p>
             <button id="populate-db-btn" class="btn-primary"><i class="fas fa-database mr-2"></i>Popular Dados Iniciais</button>
           </div>
         </section>
@@ -350,56 +354,12 @@
           <label class="admin-label">Telefone</label>
           <input id="enrollPhone" type="tel" class="admin-input" placeholder="(00) 00000-0000" required />
         </div>
+        
+        <!-- ATUALIZADO: Campo Setor (Manual) -->
         <div>
           <label class="admin-label">Setor</label>
-          <!-- ATUALIZADO: Input com datalist -->
-          <input id="enrollSector" type="text" class="admin-input" placeholder="Digite ou selecione seu setor" list="sectores-list" required />
-          <datalist id="sectores-list">
-            <option value="Conselho de Administração">
-            <option value="Presidência">
-            <option value="Conselho Técnico-Científico">
-            <option value="Conselho Fiscal">
-            <option value="Comitê de Ética e Conduta">
-            <option value="Unidade de Ouvidoria Geral">
-            <option value="Diretoria Executiva de Governança e Controle">
-            <option value="Coordenadoria de Planejamento Estratégico">
-            <option value="Serviço de Conformidade e Prevenção de Riscos">
-            <option value="Serviço de Apoio Jurídico">
-            <option value="Supervisão de Gestão de Processos">
-            <option value="Secretaria Executiva">
-            <option value="Coordenadoria de Engenharia e de Socioeconomia">
-            <option value="Coordenadoria de Tecnologia da Informação e Comunicações">
-            <option value="Coordenadoria de Gestão Administrativa">
-            <option value="Secretaria-Geral da Presidência">
-            <option value="Unidade de Engenharia Civil e Arquitetura">
-            <option value="Unidade de Engenharia de Telecomunicações">
-            <option value="Serviço de Projetos e Orçamentos">
-            <option value="Serviço de Operação e Suporte">
-            <option value="Divisão de Desenvolvimento de Sistemas">
-            <option value="Supervisão de Desenvolvimento de Sistemas">
-            <option value="Divisão de Infraestrutura, Suporte de TIC e Segurança da Informação">
-            <option value="Supervisão de Atendimento e Suporte ao Usuário de TIC">
-            <option value="Supervisão de Gestão de Pessoas">
-            <option value="Serviço de Recrutamento e Seleção">
-            <option value="Supervisão de Gestão e Fiscalização de Contratos">
-            <option value="Supervisão de Conservação e Manutenção Predial e de Bens Móveis">
-            <option value="Supervisão Gestão de Contratos de Abastecimento">
-            <option value="Unidade de Aquisição de Bens e Serviços e de Pesquisa de Preços">
-            <option value="Unidade de Gestão de Licitações e Chamamentos">
-            <option value="Coordenadoria de Gestão Orçamentária e Financeira">
-            <option value="Coordenadoria de Relações Institucionais">
-            <option value="Coordenadores Executivo Bairro">
-            <option value="Supervisão de Execução Orçamentária e Financeira">
-            <option value="Supervisão de Marketing e Mídias Visuais">
-            <option value="Coordenadores Executivo Mirim">
-            <option value="Supervisão de Planejamento e Acompanhamento Orçamentário e Financeiro">
-            <option value="Unidade de Direção Socioambiental">
-            <option value="Coordenadores Executivo Bairro-Escola">
-            <option value="Serviço de Pagamento de Pessoal">
-            <option value="Unidade de Promoção de Eventos">
-            <option value="Coordenadores Executivo Itinerante">
-            <option value="Unidade de Jornalismo">
-          </datalist>
+          <input id="enrollSector" type="text" class="admin-input" placeholder="Ex: Comunicação, Pedagógico..." required />
+          <!-- O <datalist> foi removido -->
         </div>
 
         <!-- Termos e LGPD -->
@@ -410,6 +370,7 @@
           </label>
           <label class="flex items-start gap-3 cursor-pointer text-sm">
             <input type="checkbox" id="enrollTermPrivacy" class="mt-1 h-5 w-5 accent-blue-600" required />
+            <!-- ATUALIZADO: Link para abrir modal de privacidade -->
             <span class="text-gray-700">Eu li e concordo com a <a href="#" id="open-privacy-enroll" class="text-blue-600 underline">Política de Privacidade (LGPD)</a>.</span>
           </label>
         </div>
@@ -559,11 +520,11 @@
           <textarea class="admin-textarea" id="courseFullDescription" rows="3" required></textarea>
         </div>
         <div>
-          <label class_name="admin-label" for="courseTargetAudience">Público-alvo</label>
+          <label class="admin-label" for="courseTargetAudience">Público-alvo</label>
           <textarea class="admin-textarea" id="courseTargetAudience" rows="2" required></textarea>
         </div>
         
-        <!-- Seção 3: Construtores Dinâmicos (Substituindo JSON) -->
+        <!-- Seção 3: Construtores Dinâmicos -->
         
         <!-- Detalhes (Key-Value) -->
         <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Detalhes (Data, Carga, etc.)</h4>
@@ -687,142 +648,47 @@
     </div>
   </div>
 
-  <!-- ADICIONADO: Modal de Política de Privacidade -->
+  <!-- ADICIONADO: Modal Política de Privacidade -->
   <div id="modalPrivacyPolicy" class="modal-backdrop">
-    <div class="modal-card modal-card-xl p-8">
+    <div class="modal-card modal-card-lg p-8">
       <div class="flex items-start justify-between mb-4">
         <h3 class="text-2xl font-bold" style="color: var(--text);">Termo de Privacidade</h3>
         <button id="closePrivacy" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
       
-      <!-- Conteúdo do PDF formatado -->
-      <div class="prose max-w-none text-gray-700" style="max-height: 70vh; overflow-y: auto; padding-right: 1rem;">
+      <!-- Conteúdo do Termo (extraído do PDF) -->
+      <div class="prose prose-sm max-w-none text-gray-700 space-y-4">
         <h4 class="font-bold text-lg">CAPÍTULO I: INTRODUÇÃO</h4>
-        <p>Neste Termo de Uso, o VISITANTE (titular dos dados) do serviço portal do EVERESTE encontrará informações sobre:</p>
-        <ol class="list-decimal list-inside ml-4">
-          <li>O funcionamento do serviço e as regras aplicáveis a ele;</li>
-          <li>O conjunto de regras relacionadas à prestação do serviço;</li>
-          <li>As responsabilidades do usuário do site ao utilizar o serviço;</li>
-          <li>As responsabilidades da administração pública ao fornecer o serviço;</li>
-          <li>Informações para contato, caso necessário atualização de informações ou esclarecimento de dúvidas;</li>
-          <li>Autoridade responsável por eventuais reclamações caso questões deste Termo de Uso tenham sido violadas.</li>
-        </ol>
-        <p>Além disso, no Aviso de Privacidade, o usuário do serviço do portal do EVERESTE encontrará informações sobre:</p>
-        <ul class="list-disc list-inside ml-4">
-          <li>Qual o tratamento dos dados pessoais realizados e a sua finalidade;</li>
-          <li>Os dados pessoais dos usuários necessários para a prestação deste serviço;</li>
-          <li>A forma como os dados são coletados;</li>
-          <li>Informações sobre compartilhamento de dados com terceiros;</li>
-          <li>Quais medidas de segurança são utilizadas para proteger os dados pessoais.</li>
-        </ul>
-        <p>Nas informações sobre Cookies, o usuário do serviço do portal encontrará detalhes sobre:</p>
-        <ul class="list-disc list-inside ml-4">
-          <li>Cookies próprios (primários) e de terceiros;</li>
-          <li>Cookies utilizados para uso de redes sociais;</li>
-          <li>Configuração de Cookies no navegador.</li>
-        </ul>
-
-        <h4 class="font-bold text-lg mt-6">CAPÍTULO II: ACEITAÇÃO DOS TERMOS</h4>
-        <p>Ao utilizar os serviços, o usuário confirma que leu e compreendeu os Termos e Políticas aplicáveis ao serviço do portal do EVERESTE e concorda em ficar vinculado a eles.</p>
-        <p>São aplicáveis a esse serviço as seguintes leis e normativos:</p>
-        <ul class="list-disc list-inside ml-4">
-          <li>Lei nº 12.965, de 23 de abril de 2014 (Marco Civil da Internet);</li>
-          <li>Lei nº 13.460, de 26 de junho de 2017 (Direitos do usuário dos serviços públicos);</li>
-          <li>Lei nº 13.709, de 14 de agosto de 2018 (Lei Geral de Proteção de Dados Pessoais - LGPD);</li>
-          <li>Decreto nº 9.637, de 26 de dezembro de 2018 (Política Nacional de Segurança da Informação).</li>
-        </ul>
-
-        <h4 class="font-bold text-lg mt-6">CAPÍTULO III: DAS OBRIGAÇÕES DOS VISITANTES</h4>
-        <p>O usuário se responsabiliza pela clareza e transparência dos dados informados e reconhece que a imprecisão destes poderá causar a impossibilidade de se utilizar o serviço portal do EVERESTE.</p>
-        <p>Durante a utilização do serviço, a fim de preservar e proteger os direitos de terceiros, o usuário se compromete em fornecer somente seus dados pessoais, e não os de terceiros.</p>
-        <p>O acesso (login) e senha só poderão ser utilizados pelo VISITANTE cadastrado. Ele se compromete a manter em sigilo sua senha, sendo esta pessoal e intransferível, não sendo possível, em qualquer hipótese, a alegação de uso indevido, após o ato de compartilhamento.</p>
-        <p>O VISITANTE é responsável pela atualização das suas informações pessoais e consequências no descuido ou erros nas informações pessoais cadastradas.</p>
-        <p>O VISITANTE é responsável pela reparação de todos e quaisquer danos, diretos ou indiretos que sejam causados à cúpula administrativa da instituição, a qualquer outro Usuário, ou, ainda, a qualquer terceiro, inclusive no ato do descumprimento do estabelecido nestes Termos de Uso.</p>
-        <p>O Órgão não poderá ser responsabilizado pelos seguintes fatos:</p>
-        <ul class="list-disc list-inside ml-4">
-          <li>Equipamento danificado no momento do consumo de serviços;</li>
-          <li>Proteção do computador;</li>
-          <li>Equipamento infectado ou invadido por atacantes;</li>
-          <li>Proteção das informações baseadas nos computadores dos usuários;</li>
-          <li>Abuso de uso dos computadores dos usuários;</li>
-          <li>Monitoração ilegal do computador dos usuários;</li>
-          <li>Vulnerabilidades ou instabilidades existentes nos sistemas dos usuários;</li>
-          <li>Perímetro inseguro.</li>
-        </ul>
-
-        <h4 class="font-bold text-lg mt-6">CAPÍTULO IV: AVISO de PRIVACIDADE</h4>
-        <p>Privacidade e segurança são prioridades para o portal do EVERESTE, que tem comprometimento com a transparência do tratamento de dados pessoais de seus VISITANTES (titular dos dados). Por isso, este Aviso de Privacidade estabelece como é realizado o tratamento de dados dos usuários que acessam o Portal.</p>
+        <p>Neste Termo de Uso, o VISITANTE (titular dos dados) do serviço portal do EVERESTE encontrará informações sobre: O funcionamento do serviço e as regras aplicáveis a ele; O conjunto de regras relacionadas à prestação do serviço; As responsabilidades do usuário do site ao utilizar o serviço; As responsabilidades da administração pública ao fornecer o serviço; Informações para contato, caso necessário atualização de informações ou esclarecimento de dúvidas; Autoridade responsável por eventuais reclamações caso questões deste Termo de Uso tenham sido violadas.</p>
         
-        <h5 class="font-bold text-md mt-4">4.1. DAS FINALIDADES DOS DADOS COLETADOS</h5>
-        <p>O portal do EVERESTE coleta dados pessoais por meio de cookies através do navegador de internet (browser). Os dados são tratados com a finalidade de simplificar as solicitações, a prestação e o acompanhamento dos serviços públicos, com foco na experiência do usuário.</p>
-        <p>Para a finalidade acima descrita, o portal realiza o tratamento dos seguintes dados pessoais, por meio de cookies:</p>
-        <ul class="list-disc list-inside ml-4">
-          <li>Identificação de dispositivo na internet (endereço IP anonimizado);</li>
-          <li>Endereço virtual de página da internet (registros de pesquisas, inclusive em outros sites visitados);</li>
-          <li>País, estado e cidade (localização geral);</li>
-          <li>Faixa etária;</li>
-          <li>Sexo biológico;</li>
-          <li>Dados do dispositivo (modelo de hardware, sistema operacional).</li>
-        </ul>
-        <p>Em conformidade com a Lei Geral de Proteção de Dados, o tratamento de dados pessoais será realizado utilizando como base legal: "art. 7º, I - mediante o fornecimento de consentimento pelo titular;"</p>
+        <h4 class="font-bold text-lg mt-4">CAPÍTULO II: ACEITAÇÃO DOS TERMOS</h4>
+        <p>Ao utilizar os serviços, o usuário confirma que leu e compreendeu os Termos e Políticas aplicáveis ao serviço do portal do EVERESTE e concorda em ficar vinculado a eles. São aplicáveis a esse serviço as seguintes leis e normativos: Lei nº 12.965 (Marco Civil da Internet), Lei nº 13.460 (Defesa dos direitos do usuário dos serviços públicos), Lei nº 13.709 (LGPD) e Decreto nº 9.637 (Política Nacional de Segurança da Informação).</p>
 
-        <h5 class="font-bold text-md mt-4">4.2. DIREITOS DO VISITANTE</h5>
-        <p>O portal do EVERESTE assegura a seus usuários seus direitos de titular dos dados pessoais previstos na LGPD da instituição. Dessa forma, é possível, de maneira gratuita e a qualquer momento:</p>
-        <ul class="list-disc list-inside ml-4">
-          <li>Se opor ao tratamento de dados pessoais a qualquer momento.</li>
-          <li>Confirmar a existência de tratamento de dados pessoais.</li>
-          <li>Acessar seus dados pessoais.</li>
-          <li>Corrigir seus dados pessoais.</li>
-          <li>Limitar seus dados pessoais quando desnecessários, excessivos ou tratados em desconformidade.</li>
-          <li>Solicitar a portabilidade de seus dados pessoais.</li>
-          <li>Eliminar seus dados pessoais, tratados a partir de seu consentimento.</li>
-          <li>Revogar seu consentimento, desautorizando o tratamento de seus dados.</li>
-        </ul>
-
-        <h5 class="font-bold text-md mt-4">4.3. PERÍODO DE ARMAZENAMENTO</h5>
-        <p>Os dados pessoais coletados através do portal do EVERESTE serão utilizados e armazenados durante o tempo necessário para a prestação do serviço ou para que as finalidades listadas neste Aviso de Privacidade sejam atingidas, considerando os direitos dos VISITANTES e dos responsáveis pelo tratamento de dados.</p>
-        <p>De modo geral, os dados serão mantidos enquanto relevantes. Após o período, estes serão excluídos de nossas bases de dados ou anonimizados.</p>
-
-        <h5 class="font-bold text-md mt-4">4.4. DA SEGURANÇA DE TRABALHO</h5>
-        <p>Para manter os dados pessoais protegidos, são usadas ferramentas físicas, eletrônicas e gerenciais direcionadas para a proteção e privacidade. O portal do EVERESTE se compromete a utilizar as melhores práticas para evitar incidentes de segurança.</p>
-        <p>Contudo, é necessário destacar que nenhuma página virtual é inteiramente segura e livre de riscos. É possível que, apesar de todos os protocolos de segurança, problemas de culpa exclusiva de terceiros ocorram, como ataques cibernéticos ou também em decorrência do descaso ou descuido do próprio usuário.</p>
-
-        <h5 class="font-bold text-md mt-4">4.5. DO COMPARTILHAMENTO DE DADOS</h5>
-        <p>Tendo em vista a preservação da privacidade, o portal do EVERESTE não compartilhará dados pessoais com nenhum terceiro não autorizado. Os operadores listados a seguir realizam o tratamento de dados pessoais em nome do responsável pelo tratamento (controlador), respeitando a devida LGPD da instituição.</p>
-        <ul class="list-disc list-inside ml-4">
-          <li>Determinação legal, requerimento, requisição ou ordem judicial, com autoridades judiciais, administrativas ou governamentais competentes.</li>
-          <li>Proteção dos direitos do portal do EVERESTE em qualquer tipo de conflito, inclusive os de teor judicial.</li>
-        </ul>
-
-        <h5 class="font-bold text-md mt-4">4.6. ATUALIZAÇÃO DO AVISO</h5>
-        <p>A presente versão deste Aviso de Privacidade foi atualizada pela última vez em 23 de fevereiro de 2024.</p>
-        <p>O editor se reserva o direito de modificar, a qualquer momento, as presentes normas, especialmente para adaptá-las às melhorias do serviço do portal do EVERESTE.</p>
+        <h4 class="font-bold text-lg mt-4">CAPÍTULO III: DAS OBRIGAÇÕES DOS VISITANTES</h4>
+        <p>O usuário se responsabiliza pela clareza e transparência dos dados informados e reconhece que a imprecisão destes poderá causar a impossibilidade de se utilizar o serviço. Durante a utilização do serviço, o usuário se compromete em fornecer somente seus dados pessoais, e não os de terceiros. O acesso (login) e senha só poderão ser utilizados pelo VISITANTE cadastrado. O VISITANTE é responsável pela atualização das suas informações pessoais e pela reparação de todos e quaisquer danos, diretos ou indiretos que sejam causados à cúpula administrativa da instituição ou a qualquer terceiro.</p>
         
-        <h5 class="font-bold text-md mt-4">4.7. RESPONSABILIDADE</h5>
-        <p>O portal do EVERESTE prevê a responsabilidade dos agentes que atuam nos processos de tratamento de dados, em conformidade com a LGPD. E se compromete em manter este Aviso de Privacidade atualizado, observando suas determinações e zelando por seu cumprimento.</p>
-        <p>O portal do EVERESTE não se responsabiliza por:</p>
-        <ul class="list-disc list-inside ml-4">
-          <li>Quaisquer consequências decorrentes do descaso ou descuido dos usuários em relação a seus dados individuais.</li>
-          <li>Ações maliciosas de terceiros, como ataques cibernéticos, exceto se comprovada conduta culposa ou deliberada do portal do EVERESTE.</li>
-          <li>Inveracidade das informações inseridas pelo usuário.</li>
-        </ul>
-
-        <h4 class="font-bold text-lg mt-6">CAPÍTULO V: COOKIES</h4>
-        <p>O portal do EVERESTE utiliza cookies próprios (primários), ou seja, do domínio evereste.org.br, para registrar as configurações e preferências de navegação dos usuários e gerar relatórios estatísticos através do Google Analytics, e também cookies de terceiros para complementar essas estatísticas.</p>
+        <h4 class="font-bold text-lg mt-4">CAPÍTULO IV: AVISO DE PRIVACIDADE</h4>
+        <p>Privacidade e segurança são prioridades para o portal do EVERESTE. Este Aviso de Privacidade estabelece como é realizado o tratamento de dados dos usuários. Ao utilizar os serviços, o VISITANTE entende que seus dados pessoais serão tratados e compartilhados nas formas descritas neste Aviso.</p>
         
-        <h5 class="font-bold text-md mt-4">5.1. COOKIES DE TERCEIROS</h5>
-        <p>O portal do EVERESTE depende dos serviços fornecidos por terceiros. Os cookies de terceiros, no portal do EVERESTE, são todos cookies de publicidade e multimídia da Google. O Google Analytics no portal do EVERESTE tem recursos de relatórios de publicidade ativados.</p>
-        <p>Domínios: Google, Youtube, Doubleclick.net</p>
-
-        <h5 class="font-bold text-md mt-4">5.2. COOKIES DE CANAIS DIGITAIS</h5>
-        <p>O portal do EVERESTE incorpora vídeos e outros arquivos de mídias provenientes do Facebook, Youtube e Google.</p>
-
-        <h5 class="font-bold text-md mt-4">5.3. CONFIGURAÇÕES DE COOKIES NO NAVEGADOR</h5>
-        <p>O usuário pode alterar as permissões a qualquer momento, bloquear ou recusar os Cookies, com exceção dos estritamente necessários. Todavia, a revogação do consentimento de determinados Cookies pode prejudicar o correto funcionamento de alguns recursos do portal do EVERESTE.</p>
+        <h5 class="font-bold">4.1. DAS FINALIDADES DOS DADOS COLETADOS</h5>
+        <p>O portal do EVERESTE coleta dados pessoais (como Nome, E-mail, Telefone, Setor) através do formulário de inscrição com a finalidade de gerir a inscrição, participação no curso, realizar o check-in e emitir certificados. Os dados são tratados com a finalidade de simplificar as solicitações, a prestação e o acompanhamento dos serviços, com foco na experiência do usuário. Em conformidade com a LGPD, o tratamento de dados será realizado utilizando como base legal o fornecimento de consentimento pelo titular.</p>
+        
+        <h5 class="font-bold mt-2">4.2. DIREITOS DO VISITANTE</h5>
+        <p>O portal do EVERESTE assegura a seus usuários seus direitos de titular dos dados pessoais previstos na LGPD. Dessa forma, é possível, de maneira gratuita e a qualquer momento: Opor-se ao tratamento de dados, confirmar a existência de tratamento, acessar seus dados, corrigir seus dados, limitar seus dados, solicitar a portabilidade, eliminar seus dados pessoais e revogar seu consentimento.</p>
+        
+        <h5 class="font-bold mt-2">4.4. DA SEGURANÇA DE TRABALHO</h5>
+        <p>Para manter os dados pessoais protegidos, são usadas ferramentas físicas, eletrônicas e gerenciais direcionadas para a proteção e privacidade. O portal do EVERESTE se compromete a utilizar as melhores práticas para evitar incidentes de segurança. Contudo, é necessário destacar que nenhuma página virtual é inteiramente segura e livre de riscos.</p>
+        
+        <h5 class="font-bold mt-2">4.5. DO COMPARTILHAMENTO DE DADOS</h5>
+        <p>Tendo em vista a preservação da privacidade, o portal do EVERESTE não compartilhará dados pessoais com nenhum terceiro não autorizado, exceto em casos de: Determinação legal, requerimento, requisição ou ordem judicial; ou Proteção dos direitos do portal do EVERESTE em qualquer tipo de conflito.</p>
+        
+        <h4 class="font-bold text-lg mt-4">CAPÍTULO V: COOKIES</h4>
+        <p>O portal do EVERESTE utiliza cookies próprios (primários) para registrar as configurações e preferências de navegação dos usuários e gerar relatórios estatísticos através do Google Analytics, e também cookies de terceiros para complementar essas estatísticas. Os dados do Google Analytics e de terceiros são anonimizados.</p>
+        <p>O usuário pode alterar as permissões a qualquer momento, bloquear ou recusar os Cookies, com exceção dos estritamente necessários, através das configurações do seu navegador.</p>
       </div>
 
       <div class="flex justify-end gap-4 pt-4 border-t mt-6">
-        <button type="button" id="closePrivacyBtn" class="btn-primary">Fechar</button>
+        <button type="button" id="closePrivacyBtn" class="btn-primary">Entendi</button>
       </div>
     </div>
   </div>
@@ -833,4 +699,3 @@
   <script type="module" src="app.js"></script>
 </body>
 </html>
-
