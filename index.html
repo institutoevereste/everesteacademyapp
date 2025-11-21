@@ -4,21 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evereste Academy</title>
-  
-  <!-- Fontes e Ícones -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Chart.js (necessário para os gráficos) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- Folha de Estilo Personalizada -->
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF para exportação de relatórios -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body class="antialiased">
@@ -37,9 +33,7 @@
         </a>
       </div>
       <div class="flex items-center gap-4">
-        <!-- Botão Admin visível apenas se logado como admin -->
         <button id="adminBtnHeader" class="btn-ghost text-sm"><i class="fas fa-lock mr-2"></i>Admin</button>
-        <!-- Botão Logout visível apenas se logado como admin -->
         <button id="logoutBtnHeader" class="btn-danger text-sm hidden"><i class="fas fa-right-from-bracket mr-2"></i>Logout</button>
       </div>
     </div>
@@ -47,24 +41,12 @@
 
   <!-- Main View (Course List) -->
   <div id="main-view">
-    <!-- Hero (Tema Escuro) -->
+    <!-- Hero -->
     <section class="hero relative text-white">
       <div class="relative z-10 container mx-auto px-6 py-24 md:py-32">
         <div class="reveal max-w-3xl">
           <span class="badge mb-5" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;"><i class="fa-solid fa-bolt"></i> Inscrições Abertas</span>
-          
-          <!-- INÍCIO: Animação "Concept 3" do Título -->
-          <div class="hero-title-animation-wrapper">
-            <!-- Zonas de hover invisíveis -->
-            <div class="hover-zone top"></div>
-            <div class="hover-zone bottom"></div>
-            <!-- O Título -->
-            <h1 class="text-5xl md:text-7xl font-black leading-tight mb-4 hero-animated-title" style="color: white;">
-              Evereste Academy
-            </h1>
-          </div>
-          <!-- FIM: Animação "Concept 3" do Título -->
-          
+          <h1 class="text-5xl md:text-7xl font-black leading-tight mb-4" style="color: white;">Evereste Academy</h1>
           <p class="text-lg md:text-xl text-slate-200 max-w-2xl mb-8">Formações práticas e focadas em resultados para elevar a excelência do Instituto Evereste. Profissionalismo, dinamismo e tecnologia a favor do seu desenvolvimento.</p>
           <div class="flex items-center gap-4 flex-wrap">
             <a href="#cursos" class="btn-primary"><i class="fa-solid fa-graduation-cap mr-2"></i> Ver Cursos</a>
@@ -89,16 +71,14 @@
         <p class="text-lg" style="color: var(--text-muted);">Inscrições abertas para as próximas turmas</p>
       </div>
       <div id="courses-list-open" class="grid md:grid-cols-2 gap-8 mb-20">
-        <!-- Cards de cursos com status 'aberto' -->
         <p class="text-center md:col-span-2 text-gray-500">A carregar cursos...</p>
       </div>
 
       <!-- Cursos Futuros -->
       <div class="reveal">
         <h3 class="text-3xl font-bold mb-8 text-center" style="color: var(--text);">Em Breve</h3>
-        <div id="courses-list-soon" class="flex flex-wrap gap-6 justify-center">
-          <!-- Cards de cursos com status 'em_breve' -->
-           <p class="text-center w-full text-gray-500">A carregar futuros cursos...</p>
+        <div id="courses-list-soon" class="grid md:grid-cols-3 gap-6">
+           <p class="text-center md:col-span-3 text-gray-500">A carregar futuros cursos...</p>
         </div>
       </div>
     </section>
@@ -131,7 +111,6 @@
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="text-center md:text-left">
             <p class="text-sm" style="color: var(--text-muted);">© 2025 Evereste Academy. Todos os direitos reservados.</p>
-            <!-- ATUALIZADO: Link da Política de Privacidade -->
             <a href="#" id="privacy-policy-link" class="text-sm text-blue-600 hover:underline">Política de Privacidade</a>
           </div>
           <div class="flex items-center gap-4">
@@ -142,11 +121,10 @@
         </div>
       </div>
     </footer>
-  </div> <!-- FIM DA <div id="main-view"> -->
+  </div>
 
   <!-- Course Detail View -->
   <div id="course-detail-view" class="hidden">
-    <!-- O conteúdo dinâmico será injetado aqui pela função renderCourseDetail() -->
     <p class="text-center p-20">A carregar detalhes do curso...</p>
   </div>
   
@@ -158,12 +136,9 @@
         <div class="mb-10 px-4 pt-3">
           <h2 class="text-2xl font-bold text-slate-800">Painel Admin</h2>
         </div>
-        
-        <!-- Link do Dashboard -->
         <a href="#dashboard" class="admin-nav-link active" data-target="admin-dashboard">
           <i class="fa-solid fa-chart-line"></i> Dashboard
         </a>
-        
         <a href="#cursos" class="admin-nav-link" data-target="admin-cursos">
           <i class="fa-solid fa-graduation-cap"></i> Cursos
         </a>
@@ -173,12 +148,6 @@
         <a href="#instrutores" class="admin-nav-link" data-target="admin-instrutores">
           <i class="fa-solid fa-chalkboard-user"></i> Instrutores
         </a>
-        
-        <!-- ADICIONADO: Link de Configurações -->
-        <a href="#config" class="admin-nav-link" data-target="admin-config">
-          <i class="fa-solid fa-cog"></i> Configurações
-        </a>
-        
         <div class="mt-auto">
           <a href="#" id="admin-logout-nav" class="admin-nav-link !border-transparent hover:!bg-red-100 hover:!text-red-700">
             <i class="fa-solid fa-right-from-bracket"></i> Sair
@@ -193,9 +162,9 @@
         <!-- Seção Dashboard -->
         <section id="admin-dashboard" class="admin-section">
           <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
-        
-          <!-- Cards de Estatísticas -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          
+          <!-- KPIs -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card-3d !p-6">
               <h3 class="text-sm font-semibold text-gray-500 uppercase">Total Matrículas</h3>
               <p id="stats-total-enrollments" class="text-3xl font-bold text-blue-600">0</p>
@@ -204,9 +173,14 @@
               <h3 class="text-sm font-semibold text-gray-500 uppercase">Total Check-ins</h3>
               <p id="stats-total-checkins" class="text-3xl font-bold text-teal-600">0</p>
             </div>
+            <div class="card-3d !p-6">
+              <h3 class="text-sm font-semibold text-gray-500 uppercase">NPS (Estimado)</h3>
+              <p id="stats-nps-score" class="text-3xl font-bold text-purple-600">0</p>
+              <p class="text-xs text-gray-400 mt-1">Baseado em avaliações (5★=Promotor, 1-3★=Detrator)</p>
+            </div>
           </div>
-        
-          <!-- Gráficos -->
+          
+          <!-- Gráficos e Comentários -->
           <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div class="card-3d !p-6">
               <h3 class="text-lg font-bold mb-4">Matrículas ao Longo do Tempo</h3>
@@ -217,6 +191,14 @@
               <canvas id="ratingsChart" height="150"></canvas>
             </div>
           </div>
+
+          <!-- Comentários Recentes -->
+          <div class="card-3d !p-6 mt-6">
+            <h3 class="text-lg font-bold mb-4">Comentários Recentes sobre Instrutores</h3>
+            <div id="recent-comments-list" class="space-y-4 max-h-80 overflow-y-auto pr-2">
+              <p class="text-gray-500 text-sm">A carregar comentários...</p>
+            </div>
+          </div>
         </section>
         
         <!-- Seção Cursos -->
@@ -225,14 +207,14 @@
             <h1 class="text-3xl font-bold">Gestão de Cursos</h1>
             <button id="admin-add-course-btn" class="btn-primary"><i class="fas fa-plus mr-2"></i>Adicionar Novo Curso</button>
           </div>
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto bg-white rounded-2xl shadow-lg">
             <table class="admin-table">
               <thead>
                 <tr>
                   <th>Título</th>
                   <th>Status</th>
+                  <th>Instrutores</th>
                   <th>Data</th>
-                  <th>Avaliação</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -245,9 +227,19 @@
         
         <!-- Seção Matrículas -->
         <section id="admin-matriculas" class="admin-section hidden">
-          <h1 class="text-3xl font-bold mb-8">Gestão de Matrículas</h1>
-          <div class="overflow-x-auto">
-            <table class="admin-table">
+          <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">Gestão de Matrículas</h1>
+            <div class="flex gap-3">
+              <!-- Filtro de Curso -->
+              <select id="admin-enrollments-filter" class="admin-select !w-auto">
+                <option value="all">Todos os Cursos</option>
+                <!-- Opções de cursos serão injetadas aqui -->
+              </select>
+              <button id="btn-export-enrollments-pdf" class="btn-secondary"><i class="fas fa-file-pdf mr-2"></i>Exportar PDF</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto bg-white rounded-2xl shadow-lg">
+            <table class="admin-table" id="enrollments-table">
               <thead>
                 <tr>
                   <th>Protocolo</th>
@@ -272,7 +264,7 @@
             <h1 class="text-3xl font-bold">Gestão de Instrutores</h1>
             <button id="admin-add-instructor-btn" class="btn-primary"><i class="fas fa-plus mr-2"></i>Adicionar Instrutor</button>
           </div>
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto bg-white rounded-2xl shadow-lg">
             <table class="admin-table">
               <thead>
                 <tr>
@@ -286,17 +278,6 @@
                 <!-- Linhas de instrutores -->
               </tbody>
             </table>
-          </div>
-        </section>
-        
-        <!-- Seção Configurações -->
-        <section id="admin-config" class="admin-section hidden">
-          <h1 class="text-3xl font-bold mb-8">Configurações</h1>
-
-          <div class="card-3d !p-6 max-w-2xl mt-8">
-            <h3 class="text-lg font-bold mb-4">Popular Banco de Dados</h3>
-            <p class="text-sm text-gray-500 mb-6">Se o seu banco de dados estiver vazio, clique aqui para adicionar os dados iniciais dos cursos e instrutores. <strong class="text-red-600">Atenção:</strong> Isso pode sobrescrever dados existentes se os IDs forem iguais.</p>
-            <button id="populate-db-btn" class="btn-primary"><i class="fas fa-database mr-2"></i>Popular Dados Iniciais</button>
           </div>
         </section>
 
@@ -354,24 +335,20 @@
           <label class="admin-label">Telefone</label>
           <input id="enrollPhone" type="tel" class="admin-input" placeholder="(00) 00000-0000" required />
         </div>
-        
-        <!-- ATUALIZADO: Campo Setor (Manual) -->
         <div>
           <label class="admin-label">Setor</label>
           <input id="enrollSector" type="text" class="admin-input" placeholder="Ex: Comunicação, Pedagógico..." required />
-          <!-- O <datalist> foi removido -->
         </div>
 
         <!-- Termos e LGPD -->
         <div class="space-y-3 pt-2">
           <label class="flex items-start gap-3 cursor-pointer text-sm">
             <input type="checkbox" id="enrollTermImage" class="mt-1 h-5 w-5 accent-blue-600" required />
-            <span class="text-gray-700">Eu concordo com o Termo de Uso de Imagem.</span>
+            <span class="text-gray-700">Eu concordo com o <a href="#" class="text-blue-600 underline show-term-modal" data-term="image">Termo de Uso de Imagem</a>.</span>
           </label>
           <label class="flex items-start gap-3 cursor-pointer text-sm">
             <input type="checkbox" id="enrollTermPrivacy" class="mt-1 h-5 w-5 accent-blue-600" required />
-            <!-- ATUALIZADO: Link para abrir modal de privacidade -->
-            <span class="text-gray-700">Eu li e concordo com a <a href="#" id="open-privacy-enroll" class="text-blue-600 underline">Política de Privacidade (LGPD)</a>.</span>
+            <span class="text-gray-700">Eu li e concordo com a <a href="#" class="text-blue-600 underline show-term-modal" data-term="privacy">Política de Privacidade (LGPD)</a>.</span>
           </label>
         </div>
 
@@ -398,26 +375,21 @@
     </div>
   </div>
 
-  <!-- Modal Check-in (SENHA FIXA) -->
+  <!-- Modal Check-in (Simplificado) -->
   <div id="modalCheckin" class="modal-backdrop">
-    <div class="modal-card modal-card-sm p-8">
-      <div class="flex items-start justify-between mb-6">
-        <div>
-          <h3 class="text-2xl font-bold" style="color: var(--text);">Check-in do Curso</h3>
-          <p class="text-sm" style="color: var(--text-muted);">Insira a senha fornecida pelo instrutor.</p>
+    <div class="modal-card modal-card-sm p-8 text-center">
+      <i class="fas fa-user-check text-6xl text-blue-500 mb-6"></i>
+      <h3 class="text-2xl font-bold" style="color: var(--text);">Confirmar Presença</h3>
+      <p class="text-base mt-2 mb-6" style="color: var(--text-muted);">Confirma a sua presença neste curso?</p>
+      <form id="checkinForm">
+        <p id="checkinError" class="text-red-600 text-sm hidden mb-4">Erro ao processar. Tente novamente.</p>
+        <div class="flex gap-4">
+          <button type="button" id="closeCheckin" class="btn-ghost w-full">Cancelar</button>
+          <button type="submit" class="btn-primary w-full">
+            <span id="checkinSubmitBtnText">Confirmar</span>
+            <span id="checkinSpinner" class="hidden"><i class="fas fa-spinner animate-spin mr-2"></i>A confirmar...</span>
+          </button>
         </div>
-        <button id="closeCheckin" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="checkinForm" class="space-y-4">
-        <div>
-          <label class="admin-label">Senha de Acesso</label>
-          <input id="checkinPassword" type="password" class="admin-input" placeholder="••••••••" required />
-        </div>
-        <p id="checkinError" class="text-red-600 text-sm hidden">Senha incorreta. Tente novamente.</p>
-        <button type="submit" class="btn-primary w-full !py-3 !text-base">
-          <span id="checkinSubmitBtnText">Validar Check-in</span>
-          <span id="checkinSpinner" class="hidden"><i class="fas fa-spinner animate-spin mr-2"></i>A validar...</span>
-        </button>
       </form>
     </div>
   </div>
@@ -525,46 +497,28 @@
         </div>
         
         <!-- Seção 3: Construtores Dinâmicos -->
-        
-        <!-- Detalhes (Key-Value) -->
         <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Detalhes (Data, Carga, etc.)</h4>
-        <div id="courseDetails-builder" class="space-y-3">
-          <!-- Campos de Detalhes (Key-Value) serão injetados aqui -->
-        </div>
+        <div id="courseDetails-builder" class="space-y-3"></div>
         <button type="button" id="addDetail-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Detalhe</button>
 
-        <!-- Objetivos (List) -->
         <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Objetivos de Aprendizagem</h4>
-        <div id="courseObjectives-builder" class="space-y-3">
-          <!-- Campos de Objetivos (Lista) serão injetados aqui -->
-        </div>
+        <div id="courseObjectives-builder" class="space-y-3"></div>
         <button type="button" id="addObjective-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Objetivo</button>
 
-        <!-- Requisitos (List) -->
         <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Requisitos</h4>
-        <div id="courseRequirements-builder" class="space-y-3">
-          <!-- Campos de Requisitos (Lista) serão injetados aqui -->
-        </div>
+        <div id="courseRequirements-builder" class="space-y-3"></div>
         <button type="button" id="addRequirement-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Requisito</button>
 
-        <!-- Atividades Práticas (Title-Description) -->
         <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Atividades Práticas</h4>
-        <div id="courseActivities-builder" class="space-y-3">
-          <!-- Campos de Atividades (Title-Desc) serão injetados aqui -->
-        </div>
+        <div id="courseActivities-builder" class="space-y-3"></div>
         <button type="button" id="addActivity-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Atividade</button>
         
-        <!-- Módulos (Title-Topics List) -->
         <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Módulos do Curso</h4>
-        <div id="courseModules-builder" class="space-y-3">
-          <!-- Campos de Módulos (Title-Topics) serão injetados aqui -->
-        </div>
+        <div id="courseModules-builder" class="space-y-3"></div>
         <button type="button" id="addModule-btn" class="btn-add-item"><i class="fas fa-plus mr-2"></i>Adicionar Módulo</button>
 
-        
         <!-- Seção 4: Configurações -->
         <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4">Configurações</h4>
-        <!-- Instructors Selection -->
         <div>
           <label class="admin-label">Instrutores</label>
           <div id="courseInstructorsList" class="checkbox-list">
@@ -572,7 +526,6 @@
           </div>
         </div>
         
-        <!-- Liberação de Avaliação -->
         <div>
           <label class="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" id="courseIsRatingEnabled" class="h-5 w-5 accent-blue-600" />
@@ -648,54 +601,8 @@
     </div>
   </div>
 
-  <!-- ADICIONADO: Modal Política de Privacidade -->
-  <div id="modalPrivacyPolicy" class="modal-backdrop">
-    <div class="modal-card modal-card-lg p-8">
-      <div class="flex items-start justify-between mb-4">
-        <h3 class="text-2xl font-bold" style="color: var(--text);">Termo de Privacidade</h3>
-        <button id="closePrivacy" class="btn-ghost !p-2 !text-lg"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      
-      <!-- Conteúdo do Termo (extraído do PDF) -->
-      <div class="prose prose-sm max-w-none text-gray-700 space-y-4">
-        <h4 class="font-bold text-lg">CAPÍTULO I: INTRODUÇÃO</h4>
-        <p>Neste Termo de Uso, o VISITANTE (titular dos dados) do serviço portal do EVERESTE encontrará informações sobre: O funcionamento do serviço e as regras aplicáveis a ele; O conjunto de regras relacionadas à prestação do serviço; As responsabilidades do usuário do site ao utilizar o serviço; As responsabilidades da administração pública ao fornecer o serviço; Informações para contato, caso necessário atualização de informações ou esclarecimento de dúvidas; Autoridade responsável por eventuais reclamações caso questões deste Termo de Uso tenham sido violadas.</p>
-        
-        <h4 class="font-bold text-lg mt-4">CAPÍTULO II: ACEITAÇÃO DOS TERMOS</h4>
-        <p>Ao utilizar os serviços, o usuário confirma que leu e compreendeu os Termos e Políticas aplicáveis ao serviço do portal do EVERESTE e concorda em ficar vinculado a eles. São aplicáveis a esse serviço as seguintes leis e normativos: Lei nº 12.965 (Marco Civil da Internet), Lei nº 13.460 (Defesa dos direitos do usuário dos serviços públicos), Lei nº 13.709 (LGPD) e Decreto nº 9.637 (Política Nacional de Segurança da Informação).</p>
-
-        <h4 class="font-bold text-lg mt-4">CAPÍTULO III: DAS OBRIGAÇÕES DOS VISITANTES</h4>
-        <p>O usuário se responsabiliza pela clareza e transparência dos dados informados e reconhece que a imprecisão destes poderá causar a impossibilidade de se utilizar o serviço. Durante a utilização do serviço, o usuário se compromete em fornecer somente seus dados pessoais, e não os de terceiros. O acesso (login) e senha só poderão ser utilizados pelo VISITANTE cadastrado. O VISITANTE é responsável pela atualização das suas informações pessoais e pela reparação de todos e quaisquer danos, diretos ou indiretos que sejam causados à cúpula administrativa da instituição ou a qualquer terceiro.</p>
-        
-        <h4 class="font-bold text-lg mt-4">CAPÍTULO IV: AVISO DE PRIVACIDADE</h4>
-        <p>Privacidade e segurança são prioridades para o portal do EVERESTE. Este Aviso de Privacidade estabelece como é realizado o tratamento de dados dos usuários. Ao utilizar os serviços, o VISITANTE entende que seus dados pessoais serão tratados e compartilhados nas formas descritas neste Aviso.</p>
-        
-        <h5 class="font-bold">4.1. DAS FINALIDADES DOS DADOS COLETADOS</h5>
-        <p>O portal do EVERESTE coleta dados pessoais (como Nome, E-mail, Telefone, Setor) através do formulário de inscrição com a finalidade de gerir a inscrição, participação no curso, realizar o check-in e emitir certificados. Os dados são tratados com a finalidade de simplificar as solicitações, a prestação e o acompanhamento dos serviços, com foco na experiência do usuário. Em conformidade com a LGPD, o tratamento de dados será realizado utilizando como base legal o fornecimento de consentimento pelo titular.</p>
-        
-        <h5 class="font-bold mt-2">4.2. DIREITOS DO VISITANTE</h5>
-        <p>O portal do EVERESTE assegura a seus usuários seus direitos de titular dos dados pessoais previstos na LGPD. Dessa forma, é possível, de maneira gratuita e a qualquer momento: Opor-se ao tratamento de dados, confirmar a existência de tratamento, acessar seus dados, corrigir seus dados, limitar seus dados, solicitar a portabilidade, eliminar seus dados pessoais e revogar seu consentimento.</p>
-        
-        <h5 class="font-bold mt-2">4.4. DA SEGURANÇA DE TRABALHO</h5>
-        <p>Para manter os dados pessoais protegidos, são usadas ferramentas físicas, eletrônicas e gerenciais direcionadas para a proteção e privacidade. O portal do EVERESTE se compromete a utilizar as melhores práticas para evitar incidentes de segurança. Contudo, é necessário destacar que nenhuma página virtual é inteiramente segura e livre de riscos.</p>
-        
-        <h5 class="font-bold mt-2">4.5. DO COMPARTILHAMENTO DE DADOS</h5>
-        <p>Tendo em vista a preservação da privacidade, o portal do EVERESTE não compartilhará dados pessoais com nenhum terceiro não autorizado, exceto em casos de: Determinação legal, requerimento, requisição ou ordem judicial; ou Proteção dos direitos do portal do EVERESTE em qualquer tipo de conflito.</p>
-        
-        <h4 class="font-bold text-lg mt-4">CAPÍTULO V: COOKIES</h4>
-        <p>O portal do EVERESTE utiliza cookies próprios (primários) para registrar as configurações e preferências de navegação dos usuários e gerar relatórios estatísticos através do Google Analytics, e também cookies de terceiros para complementar essas estatísticas. Os dados do Google Analytics e de terceiros são anonimizados.</p>
-        <p>O usuário pode alterar as permissões a qualquer momento, bloquear ou recusar os Cookies, com exceção dos estritamente necessários, através das configurações do seu navegador.</p>
-      </div>
-
-      <div class="flex justify-end gap-4 pt-4 border-t mt-6">
-        <button type="button" id="closePrivacyBtn" class="btn-primary">Entendi</button>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- SCRIPTS -->
-  <!-- Script da Aplicação -->
+  <!-- Scripts da Aplicação -->
   <script type="module" src="app.js"></script>
+
 </body>
 </html>
