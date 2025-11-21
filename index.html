@@ -161,7 +161,10 @@
         
         <!-- Seção Dashboard -->
         <section id="admin-dashboard" class="admin-section">
-          <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
+          <div class="flex justify-between items-center mb-8">
+             <h1 class="text-3xl font-bold">Dashboard</h1>
+             <button id="btn-export-dashboard-pdf" class="btn-primary"><i class="fas fa-file-pdf mr-2"></i>Exportar Relatório Completo</button>
+          </div>
           
           <!-- KPIs -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -180,22 +183,28 @@
             </div>
           </div>
           
-          <!-- Gráficos e Comentários -->
-          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <!-- Gráficos -->
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
             <div class="card-3d !p-6">
               <h3 class="text-lg font-bold mb-4">Matrículas ao Longo do Tempo</h3>
-              <canvas id="enrollmentsChart" height="150"></canvas>
+              <div style="height: 300px;">
+                <canvas id="enrollmentsChart"></canvas>
+              </div>
             </div>
             <div class="card-3d !p-6">
               <h3 class="text-lg font-bold mb-4">Média de Avaliação (Instrutores)</h3>
-              <canvas id="ratingsChart" height="150"></canvas>
+              <div style="height: 300px;">
+                <canvas id="ratingsChart"></canvas>
+              </div>
             </div>
           </div>
 
           <!-- Comentários Recentes -->
-          <div class="card-3d !p-6 mt-6">
-            <h3 class="text-lg font-bold mb-4">Comentários Recentes sobre Instrutores</h3>
-            <div id="recent-comments-list" class="space-y-4 max-h-80 overflow-y-auto pr-2">
+          <div class="card-3d !p-6">
+            <h3 class="text-lg font-bold mb-4">Histórico de Comentários e Avaliações</h3>
+            <!-- ADICIONADO: Classe 'scrollable-comments' para permitir rolagem -->
+            <div id="recent-comments-list" class="space-y-4 scrollable-comments pr-2">
+              <!-- Lista de comentários -->
               <p class="text-gray-500 text-sm">A carregar comentários...</p>
             </div>
           </div>
@@ -235,7 +244,7 @@
                 <option value="all">Todos os Cursos</option>
                 <!-- Opções de cursos serão injetadas aqui -->
               </select>
-              <button id="btn-export-enrollments-pdf" class="btn-secondary"><i class="fas fa-file-pdf mr-2"></i>Exportar PDF</button>
+              <button id="btn-export-enrollments-pdf" class="btn-secondary"><i class="fas fa-file-pdf mr-2"></i>Exportar Lista</button>
             </div>
           </div>
           <div class="overflow-x-auto bg-white rounded-2xl shadow-lg">
