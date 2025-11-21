@@ -1,5 +1,4 @@
-// Importar funções do Firebase
-// Importamos do CDN da Google para funcionar sem bundler/npm
+// Importar funções do Firebase (compatíveis com CDN do index.html)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
   getAuth,
@@ -7,9 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   signInAnonymously,
-  signInWithCustomToken,
-  setPersistence,
-  browserLocalPersistence
+  signInWithCustomToken
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import {
   getFirestore,
@@ -39,13 +36,16 @@ import {
 // === CONFIGURAÇÃO E INICIALIZAÇÃO ===
 
 // Configuração do Firebase
+// As variáveis __firebase_config e __app_id são injetadas pelo ambiente.
 let firebaseConfig;
 let appId;
 
 try {
-  // Tenta usar as variáveis injetadas (ambiente de produção)
+  // Tenta usar as variáveis injetadas
   firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-  appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+  
+  // MODIFICADO: Se __app_id não existir, usa 'academylids' para recuperar dados antigos
+  appId = typeof __app_id !== 'undefined' ? __app_id : 'academylids';
 
   // Fallback (plano B) se as variáveis não forem injetadas
   if (!firebaseConfig.apiKey) {
@@ -59,11 +59,13 @@ try {
       appId: "1:826478835273:web:0995d64419276b932cb198",
       measurementId: "G-T2TN7FL590"
     };
-    appId = 'default-app-id';
+    // MODIFICADO: Força o ID correto no fallback
+    appId = 'academylids'; 
   }
 
 } catch (e) {
   console.error("Erro ao parsear configuração do Firebase:", e);
+  // Fallback crítico em caso de erro de parse
   firebaseConfig = {
     apiKey: "AIzaSyB0xvVzytOx4dumokND-dr926krSO4-CqU",
     authDomain: "academylids.firebaseapp.com",
@@ -73,7 +75,8 @@ try {
     appId: "1:826478835273:web:0995d64419276b932cb198",
     measurementId: "G-T2TN7FL590"
   };
-  appId = 'default-app-id';
+  // MODIFICADO: Força o ID correto no fallback
+  appId = 'academylids';
 }
 
 // Inicializar Firebase
@@ -91,6 +94,7 @@ let userCheckins = {}; // Cache de check-ins do usuário
 let currentCourseId = null; // ID do curso na página de detalhes
 
 // Referências de Coleções (Baseado nas Regras)
+// O appId agora é 'academylids', então vai buscar em /artifacts/academylids/...
 const coursesCollection = collection(db, `artifacts/${appId}/public/data/courses`);
 const instructorsCollection = collection(db, `artifacts/${appId}/public/data/instructors`);
 const enrollmentsCollection = collection(db, `artifacts/${appId}/public/data/enrollments`);
@@ -160,15 +164,17 @@ function showView(viewName) {
   } else if (viewName === 'admin') {
     if (isAdmin) {
       adminPanelView.classList.remove('hidden');
-      // Resetar para a aba padrão (Cursos)
+      // Resetar para a aba padrão (Dashboard)
       document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
-      document.querySelector('.admin-nav-link[data-target="admin-cursos"]').classList.add('active');
+      document.querySelector('.admin-nav-link[data-target="admin-dashboard"]').classList.add('active');
       document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
-      document.getElementById('admin-cursos').classList.remove('hidden');
+      document.getElementById('admin-dashboard').classList.remove('hidden');
       
-      // Carregar dados iniciais
-      loadAdminCourses();
-      loadAdminInstructorsAdmin();
+      // Carregar dados iniciais do Dashboard
+      loadAdminDashboardData();
+      renderEnrollmentsChart();
+      renderRatingsChart();
+      updateRecentComments();
       
       window.scrollTo(0, 0);
     } else {
@@ -240,9 +246,12 @@ onAuthStateChanged(auth, async (user) => {
       await checkAdminStatus(user.uid);
       setAdminUI(isAdmin);
       if (isAdmin) {
-        // Se for admin e estiver na view admin, recarrega
+        // Se for admin e estiver na view admin, recarrega dashboard
         if (!adminPanelView.classList.contains('hidden')) {
-             loadAdminCourses();
+             loadAdminDashboardData();
+             renderEnrollmentsChart();
+             renderRatingsChart();
+             updateRecentComments();
         }
       }
     }
@@ -281,7 +290,6 @@ async function checkAdminStatus(uid) {
     isAdmin = adminDoc.exists();
     console.log(`Status de Admin para ${uid}: ${isAdmin}`);
   } catch (error) {
-    // MUDANÇA: Tratar erro de permissão como "não-admin" sem poluir a consola
     if (error.code === 'permission-denied' || (error.message && error.message.includes('Missing or insufficient permissions'))) {
       // Isso é esperado se o usuário for um usuário normal (não-admin)
       console.log("Verificação de admin falhou (permissões), assumindo não-admin.");
@@ -381,8 +389,11 @@ async function loadInstructors() {
     });
     localInstructors.sort((a, b) => a.name.localeCompare(b.name));
     
+    // renderInstructorsList(); // Função removida da UI principal
+    
   } catch (error) {
     console.error("Erro ao carregar instrutores:", error);
+    // instructorsList.innerHTML = `<p class="text-center md:col-span-3 text-red-500">Erro ao carregar instrutores.</p>`;
   }
 }
 
@@ -843,6 +854,7 @@ document.getElementById('admin-nav').addEventListener('click', (e) => {
     
     // Carregar dados da seção
     switch(link.dataset.target) {
+      case 'admin-dashboard': loadAdminDashboardData(); renderEnrollmentsChart(); renderRatingsChart(); updateRecentComments(); break;
       case 'admin-cursos': loadAdminCourses(); break;
       case 'admin-matriculas': loadAdminEnrollments(); break;
       case 'admin-instrutores': loadAdminInstructors(); break;
@@ -850,6 +862,212 @@ document.getElementById('admin-nav').addEventListener('click', (e) => {
     }
   }
 });
+
+// Carregar dados do Dashboard (Stats e Gráfico)
+let enrollmentsChartInstance = null;
+let ratingsChartInstance = null;
+
+async function loadAdminDashboardData() {
+  // Carregar Stats
+  try {
+    const enrollmentsSnap = await getDocs(enrollmentsCollection);
+    document.getElementById('stats-total-enrollments').textContent = enrollmentsSnap.size;
+  } catch (e) { console.error("Erro ao carregar stats matrículas:", e); }
+  
+  try {
+    const checkinsSnap = await getDocs(checkinsCollection);
+    document.getElementById('stats-total-checkins').textContent = checkinsSnap.size;
+  } catch (e) { console.error("Erro ao carregar stats checkins:", e); }
+
+  // Calcular NPS (Estimado)
+  try {
+      const ratingsSnap = await getDocs(ratingsCollection);
+      let promoters = 0;
+      let detractors = 0;
+      let totalRatings = 0;
+
+      ratingsSnap.forEach(doc => {
+          const rating = doc.data().rating;
+          if (rating === 5) promoters++;
+          if (rating >= 1 && rating <= 3) detractors++;
+          totalRatings++;
+      });
+
+      if (totalRatings > 0) {
+          const nps = Math.round(((promoters - detractors) / totalRatings) * 100);
+          document.getElementById('stats-nps-score').textContent = nps;
+      } else {
+          document.getElementById('stats-nps-score').textContent = "N/A";
+      }
+
+  } catch(e) { console.error("Erro ao calcular NPS:", e); }
+}
+
+// Renderizar Gráfico de Matrículas
+async function renderEnrollmentsChart() {
+  let enrollmentsData = [];
+  try {
+    const q = query(enrollmentsCollection);
+    const snapshot = await getDocs(q);
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.createdAt && data.createdAt.toDate) {
+        enrollmentsData.push({ date: data.createdAt.toDate() });
+      }
+    });
+    
+    // Agrupar por dia
+    const enrollmentsByDay = enrollmentsData.reduce((acc, curr) => {
+      const day = curr.date.toISOString().split('T')[0];
+      acc[day] = (acc[day] || 0) + 1;
+      return acc;
+    }, {});
+    
+    // Preparar dados para o gráfico
+    const sortedDays = Object.keys(enrollmentsByDay).sort();
+    const labels = sortedDays.map(day => {
+      const [year, month, d] = day.split('-');
+      return `${d}/${month}`;
+    });
+    const data = sortedDays.map(day => enrollmentsByDay[day]);
+    
+    const ctx = document.getElementById('enrollmentsChart').getContext('2d');
+    
+    if (enrollmentsChartInstance) {
+      enrollmentsChartInstance.destroy(); // Destrói gráfico anterior
+    }
+    
+    enrollmentsChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Novas Matrículas',
+          data: data,
+          borderColor: 'rgba(0, 102, 204, 1)',
+          backgroundColor: 'rgba(0, 102, 204, 0.1)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    });
+    
+  } catch (e) {
+    console.error("Erro ao renderizar gráfico:", e);
+  }
+}
+
+// Renderizar Gráfico de Avaliações (Média por Instrutor)
+async function renderRatingsChart() {
+    try {
+        const ratingsSnap = await getDocs(ratingsCollection);
+        const instructorRatings = {};
+
+        ratingsSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.instructorName) {
+                if (!instructorRatings[data.instructorName]) {
+                    instructorRatings[data.instructorName] = { total: 0, count: 0 };
+                }
+                instructorRatings[data.instructorName].total += data.rating;
+                instructorRatings[data.instructorName].count += 1;
+            }
+        });
+
+        const labels = Object.keys(instructorRatings);
+        const data = labels.map(name => (instructorRatings[name].total / instructorRatings[name].count).toFixed(1));
+
+        const ctx = document.getElementById('ratingsChart').getContext('2d');
+
+        if (ratingsChartInstance) {
+            ratingsChartInstance.destroy();
+        }
+
+        ratingsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Média de Avaliação (Estrelas)',
+                    data: data,
+                    backgroundColor: 'rgba(255, 193, 7, 0.6)',
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5
+                    }
+                }
+            }
+        });
+
+    } catch (e) {
+        console.error("Erro ao renderizar gráfico de avaliações:", e);
+    }
+}
+
+// Atualizar Lista de Comentários Recentes
+async function updateRecentComments() {
+    const list = document.getElementById('recent-comments-list');
+    list.innerHTML = '<p class="text-gray-500 text-sm">A carregar...</p>';
+
+    try {
+        // Busca as últimas 10 avaliações (idealmente usar orderBy e limit, mas requires index)
+        const q = query(ratingsCollection); 
+        const snapshot = await getDocs(q);
+        let comments = [];
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.comment) {
+                comments.push(data);
+            }
+        });
+
+        // Ordenar por data (desc) no cliente
+        comments.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+        comments = comments.slice(0, 10);
+
+        if (comments.length === 0) {
+            list.innerHTML = '<p class="text-gray-500 text-sm">Nenhum comentário ainda.</p>';
+            return;
+        }
+
+        list.innerHTML = comments.map(c => `
+            <div class="border-b pb-3 last:border-0">
+                <div class="flex justify-between items-start">
+                    <p class="font-bold text-sm text-gray-800">${c.instructorName}</p>
+                    <span class="text-xs text-gray-500">${c.createdAt ? c.createdAt.toDate().toLocaleDateString('pt-PT') : ''}</span>
+                </div>
+                <div class="flex text-yellow-400 text-xs mb-1">
+                    ${Array(c.rating).fill('<i class="fas fa-star"></i>').join('')}
+                </div>
+                <p class="text-sm text-gray-600 italic">"${c.comment}"</p>
+            </div>
+        `).join('');
+
+    } catch (e) {
+        console.error("Erro ao carregar comentários:", e);
+        list.innerHTML = '<p class="text-red-500 text-sm">Erro ao carregar.</p>';
+    }
+}
+
 
 // Carregar Cursos (Admin)
 async function loadAdminCourses() {
@@ -900,10 +1118,29 @@ async function loadAdminCourses() {
 // Carregar Matrículas (Admin)
 async function loadAdminEnrollments() {
   const tableBody = document.getElementById('admin-enrollments-table-body');
-  tableBody.innerHTML = '<tr><td colspan="7">A carregar matrículas...</td></tr>';
+  const filterSelect = document.getElementById('admin-enrollments-filter');
   
+  tableBody.innerHTML = '<tr><td colspan="7">A carregar matrículas...</td></tr>';
+
+  // Popula o filtro de cursos
+  if (filterSelect.options.length === 1) { // Se só tem "Todos"
+      localCourses.forEach(course => {
+          const option = document.createElement('option');
+          option.value = course.id;
+          option.text = course.title;
+          filterSelect.appendChild(option);
+      });
+  }
+  
+  const selectedCourseId = filterSelect.value;
+
   try {
-    const q = query(enrollmentsCollection); // Poderia adicionar orderBy
+    let q = collection(db, `artifacts/${appId}/public/data/enrollments`);
+    
+    if (selectedCourseId !== 'all') {
+        q = query(q, where('courseId', '==', selectedCourseId));
+    }
+
     const snapshot = await getDocs(q);
     
     if (snapshot.empty) {
@@ -939,6 +1176,26 @@ async function loadAdminEnrollments() {
     tableBody.innerHTML = `<tr><td colspan="7" class="text-red-500">Erro ao carregar matrículas: ${e.message}</td></tr>`;
   }
 }
+
+// Listener para o filtro de matrículas
+document.getElementById('admin-enrollments-filter').addEventListener('change', () => {
+    loadAdminEnrollments();
+});
+
+// Exportar PDF de Matrículas
+document.getElementById('btn-export-enrollments-pdf').addEventListener('click', () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.text("Relatório de Matrículas - Evereste Academy", 14, 20);
+    doc.autoTable({ 
+        html: '#enrollments-table',
+        startY: 30,
+        theme: 'striped',
+        headStyles: { fillColor: [0, 102, 204] }
+    });
+    doc.save('matriculas_evereste.pdf');
+});
 
 // Carregar Instrutores (Admin)
 async function loadAdminInstructors() {
