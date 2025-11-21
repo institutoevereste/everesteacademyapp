@@ -36,12 +36,11 @@ import {
 // === CONFIGURAÇÃO E INICIALIZAÇÃO ===
 
 // Configuração do Firebase
-// As variáveis __firebase_config e __app_id são injetadas pelo ambiente.
 let firebaseConfig;
 let appId;
 
 try {
-  // Tenta usar as variáveis injetadas
+  // Tenta usar as variáveis injetadas (ambiente de produção)
   firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
   
   // MODIFICADO: Se __app_id não existir, usa 'academylids' para recuperar dados antigos
@@ -93,7 +92,7 @@ let localInstructors = []; // Cache local de instrutores
 let userCheckins = {}; // Cache de check-ins do usuário
 let currentCourseId = null; // ID do curso na página de detalhes
 
-// Referências de Coleções (Baseado nas Regras)
+// Referências de Coleções (Baseado nas Regras e no AppID correto)
 // O appId agora é 'academylids', então vai buscar em /artifacts/academylids/...
 const coursesCollection = collection(db, `artifacts/${appId}/public/data/courses`);
 const instructorsCollection = collection(db, `artifacts/${appId}/public/data/instructors`);
@@ -1042,7 +1041,7 @@ async function updateRecentComments() {
 
         // Ordenar por data (desc) no cliente
         comments.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
-        comments = comments.slice(0, 10);
+        // comments = comments.slice(0, 10); // REMOVIDO: Removido limite de 10 comentários
 
         if (comments.length === 0) {
             list.innerHTML = '<p class="text-gray-500 text-sm">Nenhum comentário ainda.</p>';
