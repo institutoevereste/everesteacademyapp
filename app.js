@@ -1,7 +1,5 @@
-/* global Chart */
-
-// === IMPORTAÇÕES DO FIREBASE ===
 // Importar funções do Firebase
+// Importamos do CDN da Google para funcionar sem bundler/npm
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
   getAuth,
@@ -9,7 +7,9 @@ import {
   signOut,
   onAuthStateChanged,
   signInAnonymously,
-  signInWithCustomToken
+  signInWithCustomToken,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import {
   getFirestore,
@@ -42,16 +42,10 @@ import {
 let firebaseConfig;
 let appId;
 
-// CORREÇÃO:
-// O 'appId' usado no caminho do Firestore deve ser o ID do seu projeto.
-// Na Vercel, as variáveis __app_id não existem, por isso definimos 'academylids'
-// como o padrão, baseado no ID do seu projeto.
-const CORRECT_APP_ID = 'academylids';
-
 try {
-  // Tenta usar as variáveis injetadas (vai falhar na Vercel, o que é esperado)
+  // Tenta usar as variáveis injetadas (ambiente de produção)
   firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-  appId = typeof __app_id !== 'undefined' ? __app_id : CORRECT_APP_ID; // <-- CORRIGIDO
+  appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
   // Fallback (plano B) se as variáveis não forem injetadas
   if (!firebaseConfig.apiKey) {
@@ -65,12 +59,11 @@ try {
       appId: "1:826478835273:web:0995d64419276b932cb198",
       measurementId: "G-T2TN7FL590"
     };
-    appId = CORRECT_APP_ID; // <-- CORRIGIDO
+    appId = 'default-app-id';
   }
 
 } catch (e) {
   console.error("Erro ao parsear configuração do Firebase:", e);
-  // Fallback crítico em caso de erro de parse
   firebaseConfig = {
     apiKey: "AIzaSyB0xvVzytOx4dumokND-dr926krSO4-CqU",
     authDomain: "academylids.firebaseapp.com",
@@ -80,16 +73,14 @@ try {
     appId: "1:826478835273:web:0995d64419276b932cb198",
     measurementId: "G-T2TN7FL590"
   };
-  appId = CORRECT_APP_ID; // <-- CORRIGIDO
+  appId = 'default-app-id';
 }
-
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-// setLogLevel('debug');
 
 // Estado da Aplicação
 let currentUser = null;
@@ -99,12 +90,7 @@ let localInstructors = []; // Cache local de instrutores
 let userCheckins = {}; // Cache de check-ins do usuário
 let currentCourseId = null; // ID do curso na página de detalhes
 
-// RE-ADICIONADO: Instâncias dos Gráficos
-let enrollmentsChartInstance = null;
-let ratingsChartInstance = null;
-
 // Referências de Coleções (Baseado nas Regras)
-// O 'appId' corrigido será usado aqui
 const coursesCollection = collection(db, `artifacts/${appId}/public/data/courses`);
 const instructorsCollection = collection(db, `artifacts/${appId}/public/data/instructors`);
 const enrollmentsCollection = collection(db, `artifacts/${appId}/public/data/enrollments`);
@@ -138,9 +124,6 @@ const modalRating = document.getElementById('modalRating');
 const modalConfirmDelete = document.getElementById('modalConfirmDelete');
 const modalEditCourse = document.getElementById('modalEditCourse');
 const modalEditInstructor = document.getElementById('modalEditInstructor');
-// ADICIONADO: Modal de Privacidade
-const modalPrivacyPolicy = document.getElementById('modalPrivacyPolicy');
-
 
 // Função para mostrar/esconder o painel de Admin
 function setAdminUI(isAdmin) {
@@ -177,17 +160,15 @@ function showView(viewName) {
   } else if (viewName === 'admin') {
     if (isAdmin) {
       adminPanelView.classList.remove('hidden');
-      
-      // Carregar dados da aba "Dashboard" como padrão
-      loadAdminDashboardData(); 
-      renderEnrollmentsChart();
-      renderRatingsChart();
-      
-      // Resetar para a aba "Dashboard"
+      // Resetar para a aba padrão (Cursos)
       document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
-      document.querySelector('.admin-nav-link[data-target="admin-dashboard"]').classList.add('active');
+      document.querySelector('.admin-nav-link[data-target="admin-cursos"]').classList.add('active');
       document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
-      document.getElementById('admin-dashboard').classList.remove('hidden');
+      document.getElementById('admin-cursos').classList.remove('hidden');
+      
+      // Carregar dados iniciais
+      loadAdminCourses();
+      loadAdminInstructorsAdmin();
       
       window.scrollTo(0, 0);
     } else {
@@ -237,9 +218,11 @@ onAuthStateChanged(auth, async (user) => {
       try {
           console.log("A tentar login com Custom Token...");
           await signInWithCustomToken(auth, __initial_auth_token);
-          return;
+          // O onAuthStateChanged será chamado novamente com o usuário logado
+          return; // Saia por agora, deixe o próximo onAuthStateChanged tratar
       } catch (error) {
           console.error("Erro no login com Custom Token:", error);
+          // Continua para login anônimo se o token falhar
       }
   }
   
@@ -253,21 +236,23 @@ onAuthStateChanged(auth, async (user) => {
       setAdminUI(false);
     } else {
       console.log("Usuário logado:", user.email);
+      // É um usuário com e-mail, verificar se é admin
       await checkAdminStatus(user.uid);
       setAdminUI(isAdmin);
       if (isAdmin) {
-        // Carrega dados do dashboard se for admin
-        loadAdminDashboardData();
-        renderEnrollmentsChart();
-        renderRatingsChart();
+        // Se for admin e estiver na view admin, recarrega
+        if (!adminPanelView.classList.contains('hidden')) {
+             loadAdminCourses();
+        }
       }
     }
     
-    // Carregar dados públicos (sempre)
+    // Carregar dados públicos (cursos, instrutores)
+    // Isso agora acontece DEPOIS que a autenticação (anônima ou não) foi estabelecida
     loadCourses();
-    loadInstructors();
+    loadInstructors(); // Carrega instrutores para o cache
     
-    // Carregar dados privados do usuário (sempre)
+    // Carregar dados privados do usuário (check-ins)
     loadUserCheckins(user.uid);
     
   } else {
@@ -277,197 +262,16 @@ onAuthStateChanged(auth, async (user) => {
     isAdmin = false;
     setAdminUI(false);
     
+    // Tentar login anônimo para ter permissão de leitura
     try {
       await signInAnonymously(auth);
+      // O onAuthStateChanged será chamado novamente com o usuário anônimo
     } catch (error) {
       console.error("Erro no login anônimo:", error);
       showToast("Não foi possível conectar. Verifique a sua rede.", "error");
     }
   }
 });
-
-// RE-ADICIONADO: Funções do Dashboard
-
-/**
- * Destrói as instâncias ativas dos gráficos para evitar memory leaks e bugs de renderização.
- */
-function destroyCharts() {
-  if (enrollmentsChartInstance) {
-    enrollmentsChartInstance.destroy();
-    enrollmentsChartInstance = null;
-  }
-  if (ratingsChartInstance) {
-    ratingsChartInstance.destroy();
-    ratingsChartInstance = null;
-  }
-}
-
-/**
- * Carrega as estatísticas (cards) para o dashboard do admin.
- */
-async function loadAdminDashboardData() {
-  try {
-    const enrollmentsSnap = await getDocs(enrollmentsCollection);
-    document.getElementById('stats-total-enrollments').textContent = enrollmentsSnap.size;
-  } catch (e) { console.error("Erro ao carregar stats matrículas:", e); }
-
-  try {
-    const checkinsSnap = await getDocs(checkinsCollection);
-    document.getElementById('stats-total-checkins').textContent = checkinsSnap.size;
-  } catch (e) { console.error("Erro ao carregar stats checkins:", e); }
-}
-
-/**
- * Renderiza o gráfico de matrículas ao longo do tempo.
- */
-async function renderEnrollmentsChart() {
-  let enrollmentsData = [];
-  try {
-    const q = query(enrollmentsCollection);
-    const snapshot = await getDocs(q);
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.createdAt && data.createdAt.toDate) {
-        enrollmentsData.push({ date: data.createdAt.toDate() });
-      }
-    });
-    
-    // Agrupar por dia
-    const enrollmentsByDay = enrollmentsData.reduce((acc, curr) => {
-      const day = curr.date.toISOString().split('T')[0];
-      acc[day] = (acc[day] || 0) + 1;
-      return acc;
-    }, {});
-    
-    // Preparar dados para o gráfico
-    const sortedDays = Object.keys(enrollmentsByDay).sort();
-    const labels = sortedDays.map(day => {
-      const [year, month, d] = day.split('-');
-      return `${d}/${month}`;
-    });
-    const data = sortedDays.map(day => enrollmentsByDay[day]);
-    
-    const ctx = document.getElementById('enrollmentsChart').getContext('2d');
-    
-    if (enrollmentsChartInstance) {
-        enrollmentsChartInstance.destroy(); // Destrói gráfico anterior se existir
-    }
-    
-    enrollmentsChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Novas Matrículas',
-          data: data,
-          borderColor: 'rgba(0, 102, 204, 1)',
-          backgroundColor: 'rgba(0, 102, 204, 0.1)',
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1
-            }
-          }
-        }
-      }
-    });
-    
-  } catch (e) {
-    console.error("Erro ao renderizar gráfico de matrículas:", e);
-  }
-}
-
-/**
- * Renderiza o gráfico de média de avaliações por instrutor.
- */
-async function renderRatingsChart() {
-  let ratingsData = [];
-  try {
-    // Assumindo que as regras do Firestore permitem leitura de 'ratings' pelo admin
-    const q = query(ratingsCollection);
-    const snapshot = await getDocs(q);
-    snapshot.forEach(doc => {
-      ratingsData.push(doc.data());
-    });
-
-    // Agrupar avaliações por instrutor
-    const ratingsByInstructor = ratingsData.reduce((acc, curr) => {
-      const instructorName = curr.instructorName || 'N/A';
-      if (!acc[instructorName]) {
-        acc[instructorName] = { total: 0, count: 0 };
-      }
-      acc[instructorName].total += curr.rating;
-      acc[instructorName].count += 1;
-      return acc;
-    }, {});
-
-    // Calcular médias
-    const labels = Object.keys(ratingsByInstructor);
-    const data = labels.map(instructorName => {
-      const { total, count } = ratingsByInstructor[instructorName];
-      return (total / count).toFixed(1); // Média com 1 casa decimal
-    });
-
-    const ctx = document.getElementById('ratingsChart').getContext('2d');
-    
-    if (ratingsChartInstance) {
-        ratingsChartInstance.destroy(); // Destrói gráfico anterior se existir
-    }
-
-    ratingsChartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Média de Avaliação (1-5)',
-          data: data,
-          backgroundColor: [
-            'rgba(0, 168, 150, 0.6)',
-            'rgba(255, 107, 53, 0.6)',
-            'rgba(106, 76, 147, 0.6)',
-            'rgba(0, 102, 204, 0.6)',
-            'rgba(255, 200, 87, 0.6)',
-          ],
-          borderColor: [
-            'rgba(0, 168, 150, 1)',
-            'rgba(255, 107, 53, 1)',
-            'rgba(106, 76, 147, 1)',
-            'rgba(0, 102, 204, 1)',
-            'rgba(255, 200, 87, 1)',
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 5, // A avaliação é de 1 a 5
-            ticks: {
-              stepSize: 1
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: false // Oculta a legenda para um gráfico mais limpo
-          }
-        }
-      }
-    });
-
-  } catch (e) {
-    console.error("Erro ao renderizar gráfico de avaliações:", e);
-  }
-}
 
 // Função de verificação de Admin
 async function checkAdminStatus(uid) {
@@ -477,9 +281,12 @@ async function checkAdminStatus(uid) {
     isAdmin = adminDoc.exists();
     console.log(`Status de Admin para ${uid}: ${isAdmin}`);
   } catch (error) {
+    // MUDANÇA: Tratar erro de permissão como "não-admin" sem poluir a consola
     if (error.code === 'permission-denied' || (error.message && error.message.includes('Missing or insufficient permissions'))) {
+      // Isso é esperado se o usuário for um usuário normal (não-admin)
       console.log("Verificação de admin falhou (permissões), assumindo não-admin.");
     } else {
+      // Outros erros (ex: rede)
       console.error("Erro ao verificar status de admin:", error);
     }
     isAdmin = false;
@@ -496,8 +303,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   try {
     errorEl.classList.add('hidden');
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    // Sucesso, o onAuthStateChanged vai tratar o resto
     _closeModal(modalLogin);
-    showView('admin');
+    showView('admin'); // Força a ida ao admin
     showToast(`Bem-vindo, ${userCredential.user.email}!`, 'success');
   } catch (error) {
     console.error("Erro de login:", error.code, error.message);
@@ -516,6 +324,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 async function handleLogout() {
   try {
     await signOut(auth);
+    // Sucesso, o onAuthStateChanged vai tratar o login anônimo
     showView('main');
     showToast("Logout realizado com sucesso.", 'success');
   } catch (error) {
@@ -540,16 +349,18 @@ async function loadCourses() {
       localCourses.push({ id: doc.id, ...doc.data() });
     });
     
+    // Ordenar cursos (opcional, mas bom)
     localCourses.sort((a, b) => a.title.localeCompare(b.title));
     
     renderCoursesLists();
     
+    // Se estiver na página de detalhes, re-renderize
     if (currentCourseId) {
       const course = localCourses.find(c => c.id === currentCourseId);
       if (course) {
         renderCourseDetail(course);
       } else {
-        showView('main');
+        showView('main'); // Curso não existe mais
       }
     }
     
@@ -580,14 +391,15 @@ async function loadUserCheckins(uid) {
   if (!uid) return;
   try {
     const q = query(checkinsCollection, where("userId", "==", uid));
-    const querySnapshot = await getDocs(q);
+    const snapshot = await getDocs(q);
     userCheckins = {};
-    querySnapshot.forEach((doc) => {
+    snapshot.forEach(doc => {
       const checkin = doc.data();
-      userCheckins[checkin.courseId] = true;
+      userCheckins[checkin.courseId] = true; // Marca que o usuário fez check-in neste curso
     });
     console.log("Check-ins do usuário carregados:", userCheckins);
     
+    // Se estiver na página de detalhes, atualize os botões
     if (currentCourseId) {
       const course = localCourses.find(c => c.id === currentCourseId);
       if(course) updateCourseDetailButtons(course);
@@ -636,6 +448,7 @@ function renderCoursesLists() {
     coursesListSoon.innerHTML = `<p class="text-center w-full text-gray-500">Nenhum curso futuro programado.</p>`;
   } else {
      soonCourses.forEach(course => {
+        // Card "Em Breve" com aparência indisponível
         const cardHTML = `
           <div class="card-3d p-5 bg-gray-100 border-gray-200 shadow-inner opacity-70">
             <span class="badge-soon-updated mb-3"><i class="fa-solid fa-clock mr-2"></i>Em breve</span>
@@ -653,22 +466,9 @@ function renderCoursesLists() {
 
 // Renderizar Página de Detalhes do Curso
 function renderCourseDetail(course) {
-  currentCourseId = course.id;
+  currentCourseId = course.id; // Define o curso atual
   
-  const parseJSON = (data, fallback = []) => {
-    if (!data) return fallback;
-    if (Array.isArray(data) || typeof data === 'object') return data;
-    if (typeof data === 'string' && !data.startsWith('[') && !data.startsWith('{')) {
-      return [data];
-    }
-    try {
-      return JSON.parse(data) || fallback;
-    } catch (e) {
-      console.warn("Falha ao parsear JSON, tratando como texto:", data, e);
-      return [data];
-    }
-  };
-  
+  // Garantir que os dados dos construtores de formulário sejam arrays/objetos
   const details = course.details || {};
   const objectives = course.learningObjectives || [];
   const modules = course.modules || [];
@@ -756,9 +556,11 @@ function renderCourseDetail(course) {
                 <button id="checkin-btn-detail" class="btn-primary w-full">
                   <i class="fas fa-check-circle mr-2"></i>Fazer Check-in
                 </button>
+                <!-- REMOVIDO: Botão Materiais -->
                 <button id="rating-btn-detail" class="btn-primary w-full btn-disabled">
                   <i class="fas fa-star mr-2"></i>Avaliar Instrutor
                 </button>
+                <!-- REMOVIDO: Botão Certificado -->
               </div>
             </div>
           </div>
@@ -795,6 +597,7 @@ function updateCourseDetailButtons(course) {
     checkinBtn.innerHTML = '<i class="fas fa-check-double mr-2"></i>Check-in Realizado';
     checkinBtn.classList.add('btn-disabled');
     
+    // Habilitar avaliação APENAS se fez check-in E admin liberou
     if (isRatingEnabled) {
       ratingBtn.classList.remove('btn-disabled');
     } else {
@@ -807,7 +610,7 @@ function updateCourseDetailButtons(course) {
     checkinBtn.classList.remove('btn-disabled');
     
     ratingBtn.innerHTML = '<i class="fas fa-star mr-2"></i>Avaliar Instrutor';
-    ratingBtn.classList.add('btn-disabled');
+    ratingBtn.classList.add('btn-disabled'); // Desabilitado se não fez check-in
   }
 }
 
@@ -901,6 +704,7 @@ document.getElementById('checkinForm').addEventListener('submit', async (e) => {
   
   try {
     // A lógica de validação da senha está 100% nas Regras de Segurança do Firestore
+    // A regra vai comparar o campo 'password' com a string fixa
     await addDoc(checkinsCollection, {
       userId: currentUser.uid,
       courseId: courseId,
@@ -913,6 +717,7 @@ document.getElementById('checkinForm').addEventListener('submit', async (e) => {
     _closeModal(modalCheckin);
     showToast("Check-in realizado com sucesso!", "success");
     
+    // Atualiza botões na página de detalhes
     const course = localCourses.find(c => c.id === courseId);
     if(course) updateCourseDetailButtons(course);
     
@@ -1029,38 +834,19 @@ document.getElementById('admin-nav').addEventListener('click', (e) => {
   const link = e.target.closest('.admin-nav-link');
   if (link && link.dataset.target) {
     e.preventDefault();
-    
+    // Mudar tab ativa
     document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
     link.classList.add('active');
-    
+    // Mudar seção visível
     document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
     document.getElementById(link.dataset.target).classList.remove('hidden');
     
     // Carregar dados da seção
     switch(link.dataset.target) {
-      case 'admin-dashboard':
-        destroyCharts();
-        loadAdminDashboardData();
-        renderEnrollmentsChart();
-        renderRatingsChart();
-        break;
-      case 'admin-cursos': 
-        destroyCharts();
-        loadAdminCourses(); 
-        break;
-      case 'admin-matriculas': 
-        destroyCharts();
-        loadAdminEnrollments(); 
-        break;
-      case 'admin-instrutores': 
-        destroyCharts();
-        loadAdminInstructors(); 
-        break;
-      // ADICIONADO: Case para 'admin-config'
-      case 'admin-config':
-        destroyCharts(); // Limpa gráficos
-        // Não precisa carregar dados, o botão já está no HTML
-        break;
+      case 'admin-cursos': loadAdminCourses(); break;
+      case 'admin-matriculas': loadAdminEnrollments(); break;
+      case 'admin-instrutores': loadAdminInstructors(); break;
+      // REMOVIDO: case 'admin-config'
     }
   }
 });
@@ -1070,10 +856,12 @@ async function loadAdminCourses() {
   const tableBody = document.getElementById('admin-courses-table-body');
   tableBody.innerHTML = '<tr><td colspan="5">A carregar cursos...</td></tr>';
   
+  // Re-usa o cache local
   if (localCourses.length === 0) {
-    await loadCourses();
+    await loadCourses(); // Garante que temos os dados
   }
   
+  // FILTRO: Mostrar apenas cursos 'aberto' ou 'em_breve'
   const visibleCourses = localCourses.filter(
     course => course.status === 'aberto' || course.status === 'em_breve'
   );
@@ -1084,9 +872,10 @@ async function loadAdminCourses() {
   }
   
   tableBody.innerHTML = visibleCourses.map(course => {
-    let statusClass = 'bg-yellow-100 text-yellow-700';
+    let statusClass = 'bg-yellow-100 text-yellow-700'; // Default 'em_breve'
     if (course.status === 'aberto') statusClass = 'bg-green-100 text-green-700';
 
+    // Tenta buscar a data
     const courseDate = course.details && course.details.Data ? course.details.Data : 'N/A';
 
     return `
@@ -1114,7 +903,7 @@ async function loadAdminEnrollments() {
   tableBody.innerHTML = '<tr><td colspan="7">A carregar matrículas...</td></tr>';
   
   try {
-    const q = query(enrollmentsCollection);
+    const q = query(enrollmentsCollection); // Poderia adicionar orderBy
     const snapshot = await getDocs(q);
     
     if (snapshot.empty) {
@@ -1124,9 +913,11 @@ async function loadAdminEnrollments() {
     
     let rows = [];
     snapshot.forEach(doc => {
-      rows.push({ id: doc.id, ...doc.data() });
+      const data = doc.data();
+      rows.push({ id: doc.id, ...data });
     });
     
+    // Ordenar por data (mais recente primeiro) - CLIENT SIDE SORT
     rows.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
     
     tableBody.innerHTML = rows.map(data => `
@@ -1154,8 +945,9 @@ async function loadAdminInstructors() {
   const tableBody = document.getElementById('admin-instructors-table-body');
   tableBody.innerHTML = '<tr><td colspan="4">A carregar instrutores...</td></tr>';
   
+  // Re-usa o cache local
   if (localInstructors.length === 0) {
-    await loadInstructors();
+    await loadInstructors(); // Garante que temos os dados
   }
   
   if (localInstructors.length === 0) {
@@ -1176,6 +968,9 @@ async function loadAdminInstructors() {
   `).join('');
 }
 
+// REMOVIDO: loadCheckinPasswords
+// REMOVIDO: Salvar Senhas de Check-in
+
 // --- ADMIN: ABRIR MODAIS ---
 
 // Abrir Modal de Curso (para Adicionar ou Editar)
@@ -1189,6 +984,7 @@ function openCourseModal(course = null) {
   const modalTitle = document.getElementById('modalCourseTitle');
   const courseIdField = document.getElementById('courseId');
   
+  // Popular checkboxes de instrutores
   const instList = document.getElementById('courseInstructorsList');
   instList.innerHTML = localInstructors.map(inst => `
     <label>
@@ -1197,6 +993,7 @@ function openCourseModal(course = null) {
     </label>
   `).join('');
   
+  // Limpar construtores dinâmicos
   document.getElementById('courseDetails-builder').innerHTML = '';
   document.getElementById('courseObjectives-builder').innerHTML = '';
   document.getElementById('courseRequirements-builder').innerHTML = '';
@@ -1218,12 +1015,14 @@ function openCourseModal(course = null) {
     document.getElementById('courseTargetAudience').value = course.targetAudience || '';
     document.getElementById('courseIsRatingEnabled').checked = course.isRatingEnabled || false;
     
+    // Popular construtores dinâmicos
     (course.details ? Object.entries(course.details) : []).forEach(([key, value]) => addDetailField(key, value));
     (course.learningObjectives || []).forEach(value => addListItemField('courseObjectives-builder', value));
     (course.requirements || []).forEach(value => addListItemField('courseRequirements-builder', value));
     (course.practicalActivities || []).forEach(activity => addActivityField(activity));
     (course.modules || []).forEach(module => addModuleField(module));
     
+    // Marcar checkboxes de instrutores
     const instructorIds = (course.instructors || []).map(i => i.id);
     instList.querySelectorAll('input').forEach(checkbox => {
       if (instructorIds.includes(checkbox.value)) {
@@ -1235,6 +1034,7 @@ function openCourseModal(course = null) {
     // --- MODO ADICIONAR NOVO ---
     modalTitle.textContent = "Adicionar Novo Curso";
     courseIdField.value = '';
+    // Adiciona um campo vazio para começar
     addDetailField();
     addListItemField('courseObjectives-builder');
     addListItemField('courseRequirements-builder');
@@ -1257,6 +1057,7 @@ function openInstructorModal(instructor = null) {
   const idField = document.getElementById('instructorId');
   
   if (instructor) {
+    // Editar
     modalTitle.textContent = "Editar Instrutor";
     idField.value = instructor.id;
     document.getElementById('instructorName').value = instructor.name || '';
@@ -1264,6 +1065,7 @@ function openInstructorModal(instructor = null) {
     document.getElementById('instructorImage').value = instructor.image || '';
     document.getElementById('instructorBio').value = instructor.bio || '';
   } else {
+    // Adicionar
     modalTitle.textContent = "Adicionar Novo Instrutor";
     idField.value = '';
   }
@@ -1271,7 +1073,7 @@ function openInstructorModal(instructor = null) {
 }
 
 // Abrir Modal de Confirmação de Exclusão
-let _onConfirmDelete = null;
+let _onConfirmDelete = null; // Armazena a função a ser chamada
 function openConfirmModal(message, onConfirm) {
   document.getElementById('modalConfirmMessage').textContent = message;
   _onConfirmDelete = onConfirm;
@@ -1290,7 +1092,7 @@ document.getElementById('modalConfirmDeleteBtn').addEventListener('click', async
     btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i>';
     
     try {
-      await _onConfirmDelete();
+      await _onConfirmDelete(); // Executa a função de exclusão
     } catch (e) {
       console.error("Erro ao excluir:", e);
       showToast(`Erro ao excluir: ${e.message}`, 'error');
@@ -1321,12 +1123,14 @@ document.getElementById('courseForm').addEventListener('submit', async (e) => {
   errorEl.classList.add('hidden');
   
   const courseId = document.getElementById('courseId').value;
-  const finalCourseId = courseId || doc(collection(db, 'temp')).id;
+  const finalCourseId = courseId || doc(collection(db, 'temp')).id; // Gere um ID se for novo
 
   try {
+    // --- 1. Coletar Dados (dos formulários dinâmicos) ---
     let courseData;
     let selectedInstructors = [];
     
+    // Coletar instrutores selecionados
     document.querySelectorAll('#courseInstructorsList input:checked').forEach(checkbox => {
       const inst = localInstructors.find(i => i.id === checkbox.value);
       if (inst) {
@@ -1336,6 +1140,7 @@ document.getElementById('courseForm').addEventListener('submit', async (e) => {
       }
     });
       
+    // Coletar Detalhes (Key-Value)
     const details = {};
     document.querySelectorAll('#courseDetails-builder .form-builder-item').forEach(pair => {
         const key = pair.querySelector('.key').value;
@@ -1343,18 +1148,21 @@ document.getElementById('courseForm').addEventListener('submit', async (e) => {
         if (key && value) details[key] = value;
     });
 
+    // Coletar Objetivos (Lista)
     const objectives = [];
     document.querySelectorAll('#courseObjectives-builder .form-builder-item').forEach(item => {
         const value = item.querySelector('.value').value;
         if (value) objectives.push(value);
     });
     
+    // Coletar Requisitos (Lista)
     const requirements = [];
     document.querySelectorAll('#courseRequirements-builder .form-builder-item').forEach(item => {
         const value = item.querySelector('.value').value;
         if (value) requirements.push(value);
     });
     
+    // Coletar Atividades (Title-Desc)
     const activities = [];
     document.querySelectorAll('#courseActivities-builder .form-builder-item').forEach(item => {
         const title = item.querySelector('.title').value;
@@ -1362,6 +1170,7 @@ document.getElementById('courseForm').addEventListener('submit', async (e) => {
         if (title && description) activities.push({ title, description });
     });
     
+    // Coletar Módulos (Title-Topics)
     const modules = [];
     document.querySelectorAll('#courseModules-builder .form-builder-item').forEach(item => {
         const title = item.querySelector('.title').value;
@@ -1377,7 +1186,7 @@ document.getElementById('courseForm').addEventListener('submit', async (e) => {
       title: document.getElementById('courseTitle').value,
       subtitle: document.getElementById('courseSubtitle').value,
       themeColor: document.getElementById('courseThemeColor').value,
-      themeColorDark: document.getElementById('courseThemeColor').value,
+      themeColorDark: document.getElementById('courseThemeColor').value, // Pode ser customizado
       icon: document.getElementById('courseIcon').value,
       status: document.getElementById('courseStatus').value,
       headerOverlayImage: document.getElementById('courseHeaderImage').value,
@@ -1386,6 +1195,7 @@ document.getElementById('courseForm').addEventListener('submit', async (e) => {
       targetAudience: document.getElementById('courseTargetAudience').value,
       isRatingEnabled: document.getElementById('courseIsRatingEnabled').checked,
       
+      // Dados dos construtores
       details: details,
       learningObjectives: objectives,
       requirements: requirements,
@@ -1394,6 +1204,7 @@ document.getElementById('courseForm').addEventListener('submit', async (e) => {
       instructors: selectedInstructors
     };
     
+    // --- 2. Salvar no Firestore ---
     try {
       const docRef = doc(coursesCollection, finalCourseId);
       await setDoc(docRef, courseData, { merge: true });
@@ -1402,16 +1213,19 @@ document.getElementById('courseForm').addEventListener('submit', async (e) => {
       throw new Error(`Erro ao Salvar: Não foi possível salvar no banco de dados. ${dbError.message}`);
     }
     
+    // --- 3. Sucesso ---
     _closeModal(modalEditCourse);
     showToast(`Curso "${courseData.title}" salvo com sucesso!`, 'success');
-    loadCourses();
-    loadAdminCourses();
+    loadCourses(); // Recarrega a lista principal
+    loadAdminCourses(); // Recarrega a tabela do admin
     
   } catch (error) {
+    // Captura qualquer erro
     console.error("Erro geral ao salvar curso:", error);
     errorEl.textContent = error.message;
     errorEl.classList.remove('hidden');
   } finally {
+    // Sempre reabilita o botão e esconde o spinner
     btnText.classList.remove('hidden');
     spinner.classList.add('hidden');
     submitBtn.disabled = false;
@@ -1444,16 +1258,18 @@ document.getElementById('instructorForm').addEventListener('submit', async (e) =
   try {
     let docRef;
     if (instructorId) {
+      // Editar
       docRef = doc(instructorsCollection, instructorId);
       await updateDoc(docRef, instructorData);
     } else {
+      // Adicionar
       docRef = await addDoc(instructorsCollection, instructorData);
     }
     
     _closeModal(modalEditInstructor);
     showToast(`Instrutor "${instructorData.name}" salvo com sucesso!`, 'success');
-    loadInstructors();
-    loadAdminInstructors();
+    loadInstructors(); // Recarrega o cache
+    loadAdminInstructors(); // Recarrega a tabela
     
   } catch (error) {
     console.error("Erro ao salvar instrutor:", error);
@@ -1468,6 +1284,7 @@ document.getElementById('instructorForm').addEventListener('submit', async (e) =
 
 // --- Funções Helper do Construtor de Formulário ---
 
+// Adicionar Key-Value (Detalhes)
 function addDetailField(key = '', value = '') {
   const container = document.getElementById('courseDetails-builder');
   const div = document.createElement('div');
@@ -1482,6 +1299,7 @@ function addDetailField(key = '', value = '') {
   container.appendChild(div);
 }
 
+// Adicionar Item de Lista Simples (Objetivos, Requisitos)
 function addListItemField(containerId, value = '') {
   const container = document.getElementById(containerId);
   const div = document.createElement('div');
@@ -1495,6 +1313,7 @@ function addListItemField(containerId, value = '') {
   container.appendChild(div);
 }
 
+// Adicionar Atividade (Title-Description)
 function addActivityField(activity = { title: '', description: '' }) {
   const container = document.getElementById('courseActivities-builder');
   const div = document.createElement('div');
@@ -1509,6 +1328,7 @@ function addActivityField(activity = { title: '', description: '' }) {
   container.appendChild(div);
 }
 
+// Adicionar Módulo (Title-Topics List)
 function addModuleField(module = { title: '', topics: [] }) {
   const container = document.getElementById('courseModules-builder');
   const div = document.createElement('div');
@@ -1544,10 +1364,12 @@ document.getElementById('addModule-btn').addEventListener('click', () => addModu
 
 // Listener para "Remover" itens (delegação de evento)
 document.getElementById('courseForm').addEventListener('click', (e) => {
+  // Remover item principal
   if (e.target.closest('.remove-item-btn')) {
     e.target.closest('.form-builder-item').remove();
   }
   
+  // Adicionar tópico de módulo
   if (e.target.closest('.add-topic-btn')) {
     const topicsContainer = e.target.closest('.module-topics-container');
     const div = document.createElement('div');
@@ -1556,9 +1378,11 @@ document.getElementById('courseForm').addEventListener('click', (e) => {
       <input type="text" placeholder="Tópico" class="admin-input value" value="">
       <button type="button" class="btn-danger-outline remove-sub-item-btn !mt-0"><i class="fas fa-times"></i></button>
     `;
+    // Insere antes do botão "Adicionar Tópico"
     topicsContainer.insertBefore(div, e.target.closest('.add-topic-btn'));
   }
   
+  // Remover tópico de módulo
   if (e.target.closest('.remove-sub-item-btn')) {
     e.target.closest('.module-topic-item').remove();
   }
@@ -1584,18 +1408,22 @@ document.getElementById('courses-list-open').addEventListener('click', (e) => {
 // Cliques na Página de Detalhes do Curso
 courseDetailView.addEventListener('click', (e) => {
   const course = localCourses.find(c => c.id === currentCourseId);
-  if (!course) return;
+  if (!course) return; // Não faz nada se o curso não estiver carregado
 
+  // Voltar
   if (e.target.closest('#back-to-courses-btn')) {
     showView('main');
-    currentCourseId = null;
+    currentCourseId = null; // Limpa o ID do curso atual
   }
+  // Abrir modal de inscrição
   if (e.target.closest('#enroll-btn-detail')) {
     openEnrollModal(course.id, course.title);
   }
+  // Abrir modal de check-in (se o botão não estiver desabilitado)
   if (e.target.closest('#checkin-btn-detail') && !e.target.closest('.btn-disabled')) {
     openCheckinModal(course.id);
   }
+  // Abrir modal de avaliação (se o botão não estiver desabilitado)
   if (e.target.closest('#rating-btn-detail') && !e.target.closest('.btn-disabled')) {
     openRatingModal(course.id);
   }
@@ -1611,6 +1439,7 @@ document.getElementById('admin-panel-view').addEventListener('click', async (e) 
   const id = row?.dataset.id;
   
   switch (action) {
+    // --- Ações de Curso ---
     case 'edit-course':
       const course = localCourses.find(c => c.id === id);
       if (course) openCourseModal(course);
@@ -1619,11 +1448,12 @@ document.getElementById('admin-panel-view').addEventListener('click', async (e) 
       openConfirmModal(`Tem a certeza que quer excluir o curso "${id}"? Esta ação não pode ser desfeita.`, async () => {
         await deleteDoc(doc(coursesCollection, id));
         showToast("Curso excluído com sucesso.", "success");
-        loadCourses();
-        loadAdminCourses();
+        loadCourses(); // Recarrega cache
+        loadAdminCourses(); // Recarrega tabela
       });
       break;
       
+    // --- Ações de Instrutor ---
     case 'edit-instructor':
       const instructor = localInstructors.find(i => i.id === id);
       if (instructor) openInstructorModal(instructor);
@@ -1632,332 +1462,39 @@ document.getElementById('admin-panel-view').addEventListener('click', async (e) 
       openConfirmModal(`Tem a certeza que quer excluir o instrutor "${id}"?`, async () => {
         await deleteDoc(doc(instructorsCollection, id));
         showToast("Instrutor excluído com sucesso.", "success");
-        loadInstructors();
-        loadAdminInstructors();
+        loadInstructors(); // Recarrega cache
+        loadAdminInstructors(); // Recarrega tabela
       });
       break;
     
+    // --- Ações de Matrícula ---
     case 'delete-enrollment':
       openConfirmModal(`Tem a certeza que quer excluir esta matrícula ("${id}")?`, async () => {
         await deleteDoc(doc(enrollmentsCollection, id));
         showToast("Matrícula excluída com sucesso.", "success");
-        loadAdminEnrollments();
-        loadAdminDashboardData();
+        loadAdminEnrollments(); // Recarrega tabela
+        loadAdminDashboardData(); // Atualiza contagem
       });
       break;
   }
 });
 
-// Botão de Popular DB
-document.getElementById('populate-db-btn').addEventListener('click', async (e) => {
-  if (!isAdmin) {
-    showToast("Apenas administradores podem executar esta ação.", "error");
-    return;
-  }
-  
-  const btn = e.target.closest('button');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>A popular...';
-
-  try {
-    const { initialCourses, initialInstructors } = getInitialData();
-    
-    const batch = writeBatch(db);
-    
-    initialInstructors.forEach(inst => {
-      const docRef = doc(instructorsCollection, inst.id);
-      batch.set(docRef, inst);
-    });
-    
-    initialCourses.forEach(course => {
-      const docRef = doc(coursesCollection, course.id);
-      batch.set(docRef, course);
-    });
-    
-    await batch.commit();
-    showToast("Banco de dados populado com dados iniciais!", "success");
-    
-    loadCourses();
-    loadInstructors();
-    loadAdminCourses();
-    loadAdminInstructors();
-    
-  } catch (error) {
-    console.error("Erro ao popular DB:", error);
-    showToast(`Erro ao popular banco de dados: ${error.message}`, "error");
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-database mr-2"></i>Popular Dados Iniciais';
-  }
-});
-
-// === DADOS INICIAIS (POPULAR DB) ===
-function getInitialData() {
-  // Primeiro, definir os instrutores
-  const initialInstructors = [
-    { id: "marllon", name: "Marllon Costa", title: "Técnico em TI | Designer | Inovação e IA", image: "https://i.postimg.cc/sxm4TVvF/IMG-9781.jpg", bio: "Designer gráfico, graduando em marketing e autodidata em Inovação e IA." },
-    { id: "vinicius", name: "Vinícius Sena", title: "Fotógrafo Documental | Pós-produção", image: "https://i.postimg.cc/bw7kHG3D/vinicius.jpg", bio: "Formado em Animação, estudante e entusiasta de fotografia desde 2019." },
-    { id: "bruno", name: "Bruno Diogo", title: "Supervisor de Marketing | Designer | UX/UI", image: "https://i.postimg.cc/yNhgmLJK/IMG-7311.avif", bio: "Supervisor de Marketing e Mídias Visuais | Designer Gráfico e Digital." },
-    { id: "keven", name: "Keven Menezes", title: "Analista de TI | Designer Gráfico | Motion", image: "https://i.postimg.cc/fTgkcmpP/Whats-App-Image-2025-10-27-at-12-11-25.jpg", bio: "Formado em Design Gráfico e possui mais de 5 anos de experiência." },
-    { id: "deyse", name: "Deyse Pereira", title: "Estrategista em Comunicação | Gestão de Projetos", image: "https://i.postimg.cc/T1sL3bXz/IMG-7381-jpg.png", bio: "Mestre em Design de Artefatos Digitais, pós-graduanda em Gestão de Projetos." }
-  ];
-  
-  // Mapear os instrutores para fácil acesso
-  const instMap = {
-    marllon: initialInstructors[0],
-    vinicius: initialInstructors[1],
-    bruno: initialInstructors[2],
-    keven: initialInstructors[3],
-    deyse: initialInstructors[4]
-  };
-
-  // Agora, definir os cursos
-  const initialCourses = [
-    // --- Cursos Abertos ---
-    {
-      id: "fotografia",
-      title: "Workshop de Fotografia",
-      subtitle: "O Olhar que Conecta Histórias",
-      summary: "Aprenda a capturar a essência dos nossos projetos com sensibilidade e técnica.",
-      fullDescription: "No Instituto Evereste, cada imagem conta uma parte da nossa história. Este workshop é um convite para desenvolver a sua percepção e criatividade.",
-      targetAudience: "O Curso de Fotografia é voltado para pessoas que desejam explorar o poder da imagem como forma de expressão, comunicação e transformação social.",
-      themeColor: "#FFC107",
-      themeColorDark: "#E6A700",
-      icon: "fa-camera-retro",
-      status: "aberto",
-      headerOverlayImage: "https://i.postimg.cc/3rLTy2xn/medium-shot-people-with-camera.jpg",
-      details: {"Data": "28 de Outubro de 2025", "Horário": "08:30h - 12:15h", "Carga": "4 horas", "Modalidade": "Presencial e Online"},
-      learningObjectives: [
-        "Introduzir conceitos básicos de fotografia.",
-        "Desenvolver habilidades práticas com câmaras e celulares.",
-        "Capacitar para o registo de eventos e projetos."
-      ],
-      modules: [
-        { "title": "Módulo 1: Fundamentos", "topics": ["Introdução", "Equipamento", "ISO, lentes e flash"] },
-        { "title": "Módulo 2: Composição", "topics": ["Enquadramento", "Luz dura e suave", "Regra dos terços"] },
-        { "title": "Módulo 3: Edição", "topics": ["Introdução ao Lightroom", "Correção de cores", "Exercícios práticos"] }
-      ],
-      practicalActivities: [
-        { "title": "Exercício de Teste", "description": "Em duplas, os participantes tiram 3 fotos um do outro." },
-        { "title": "Exercício de Conhecimento", "description": "Os participantes tiram 3-5 fotos com diferentes tipos de iluminação." }
-      ],
-      requirements: ["Não são necessários pré-requisitos.", "Incentivamos a trazer o seu próprio smartphone ou câmara."],
-      instructors: [ instMap.bruno, instMap.vinicius ],
-      isRatingEnabled: true
-    },
-    {
-      id: "ia",
-      title: "IA Aplicada à Análise de Dados",
-      subtitle: "Do Relatório ao Insight",
-      summary: "Transforme relatórios e dados brutos em dashboards web interativos e de alto impacto.",
-      fullDescription: "Num mundo movido por dados, a capacidade de extrair insights rápidos é um superpoder. Com o 'Método Evereste Ágil', este curso vai desmistificar a IA.",
-      targetAudience: "Para todos os colaboradores, entusiastas de tecnologia e qualquer pessoa curiosa sobre o poder da inteligência artificial.",
-      themeColor: "#4CAF50",
-      themeColorDark: "#388E3C",
-      icon: "fa-brain",
-      status: "aberto",
-      headerOverlayImage: "https://i.postimg.cc/bv25v2BZ/relat-rio-1.png",
-      details: {"Data": "06 de Novembro de 2025", "Carga": "4 horas", "Modalidade": "Presencial ou Online", "Público": "Livre"},
-      learningObjectives: [
-        "Formular prompts eficazes no Gemini.",
-        "Publicar um dashboard interativo na web.",
-        "Estruturar uma apresentação de resultados."
-      ],
-      modules: [
-        { "title": "Módulo 1: Fundamentos", "topics": ["Método Evereste Ágil", "Ferramentas de IA", "Construindo o prompt"] },
-        { "title": "Módulo 2: Publicação", "topics": ["GitHub Pages", "Publicando o dashboard", "Refinamento"] },
-        { "title": "Módulo 3: Apresentação", "topics": ["Técnicas para apresentar", "Simulação", "Próximos passos"] }
-      ],
-      practicalActivities: [
-        { "title": "Oficina: O Prompt Perfeito", "description": "Participantes recebem um relatório e devem construir um prompt." },
-        { "title": "Oficina: Dashboard no Ar", "description": "Passo a passo guiado para publicar o dashboard online." }
-      ],
-      requirements: ["Indispensável ter um notebook.", "Conta Google (Gemini)", "Conta no GitHub."],
-      instructors: [ instMap.marllon ],
-      isRatingEnabled: false
-    },
-    
-    // --- NOVOS CURSOS "EM BREVE" ---
-    {
-      id: "conteudo_criativo",
-      title: "Introdução à Criação de Conteúdo Criativo",
-      subtitle: "Da Ideia ao Engajamento",
-      summary: "Aprenda a planear, criar e distribuir conteúdo que cative a sua audiência nas redes sociais.",
-      fullDescription: "Neste workshop prático, Marllon, Vini e Keven partilham as suas técnicas para criar conteúdo visual e escrito que gera impacto. Cobre tudo, desde a captação de fotos e vídeos até ao design rápido no Canva e Motion Design.",
-      targetAudience: "Colaboradores das áreas de comunicação, marketing, e qualquer pessoa interessada em melhorar a presença digital dos projetos.",
-      themeColor: "#6a4c93", // Brand Purple
-      themeColorDark: "#583f7a",
-      icon: "fa-lightbulb",
-      status: "em_breve",
-      headerOverlayImage: "https://placehold.co/600x400/6a4c93/white?text=Conteúdo+Criativo",
-      details: {"Data": "A Definir", "Carga": "4 horas", "Modalidade": "Presencial"},
-      learningObjectives: [
-        "Planear um calendário editorial",
-        "Técnicas de captação de vídeo com telemóvel",
-        "Design de posts no Canva"
-      ],
-      modules: [
-        { "title": "Módulo 1: Planeamento", "topics": ["Definindo a audiência", "Tipos de conteúdo", "Calendário"]},
-        { "title": "Módulo 2: Criação", "topics": ["Captação e Edição", "Design no Canva", "Noções de Motion"]}
-      ],
-      practicalActivities: [],
-      requirements: ["Telemóvel com câmara", "Acesso ao Canva (gratuito)"],
-      instructors: [ instMap.marllon, instMap.vinicius, instMap.keven ],
-      isRatingEnabled: false
-    },
-    {
-      id: "storytelling_copy",
-      title: "Storytelling e Copywriting",
-      subtitle: "A Arte de Contar Histórias que Vendem",
-      summary: "Domine as técnicas de escrita persuasiva e storytelling para criar narrativas envolventes.",
-      fullDescription: "As palavras têm o poder de transformar. Aprenda com Marllon e Vini a estruturar uma boa história, escrever títulos que chamam a atenção (copy) e criar textos que conectam emocionalmente com o público.",
-      targetAudience: "Ideal para equipas de comunicação, marketing, jornalismo e gestão de projetos.",
-      themeColor: "#ff6b35", // Brand Orange
-      themeColorDark: "#d95a2b",
-      icon: "fa-pen-nib",
-      status: "em_breve",
-      headerOverlayImage: "https://placehold.co/600x400/ff6b35/white?text=Storytelling",
-      details: {"Data": "A Definir", "Carga": "3 horas", "Modalidade": "Online"},
-      learningObjectives: [
-        "Entender a jornada do herói",
-        "Escrever copy para redes sociais",
-        "Aplicar gatilhos mentais éticos"
-      ],
-      modules: [
-        { "title": "Módulo 1: Storytelling", "topics": ["O que é uma história", "Jornada do Herói", "Conexão Emocional"]},
-        { "title": "Módulo 2: Copywriting", "topics": ["Títulos e Headlines", "Gatilhos Mentais", "Chamada para Ação (CTA)"]}
-      ],
-      practicalActivities: [],
-      requirements: ["Caderno de notas ou computador para exercícios de escrita."],
-      instructors: [ instMap.marllon, instMap.vinicius ],
-      isRatingEnabled: false
-    },
-    {
-      id: "design_thinking",
-      title: "Design Thinking",
-      subtitle: "Inovação Focada no Ser Humano",
-      summary: "Aprenda a metodologia de Design Thinking para resolver problemas complexos de forma criativa.",
-      fullDescription: "Guiado por Deyse Pereira, este workshop introduz as 5 fases do Design Thinking: Empatia, Definição, Ideação, Prototipagem e Teste. Uma abordagem prática para inovar em processos e projetos.",
-      targetAudience: "Gestores, líderes de projeto e qualquer colaborador que queira aprender a inovar.",
-      themeColor: "#00a896", // Brand Teal
-      themeColorDark: "#008a7b",
-      icon: "fa-users",
-      status: "em_breve",
-      headerOverlayImage: "https://placehold.co/600x400/00a896/white?text=Design+Thinking",
-      details: {"Data": "A Definir", "Carga": "4 horas", "Modalidade": "Presencial"},
-      learningObjectives: [
-        "Mapear a jornada do usuário",
-        "Conduzir sessões de brainstorming (ideação)",
-        "Criar protótipos de baixa fidelidade"
-      ],
-      modules: [
-        { "title": "Módulo 1: Imersão", "topics": ["Empatia", "Definição do Problema"]},
-        { "title": "Módulo 2: Criação", "topics": ["Ideação", "Prototipagem", "Teste e Iteração"]}
-      ],
-      practicalActivities: [],
-      requirements: ["Vontade de colaborar e post-its!"],
-      instructors: [ instMap.deyse ],
-      isRatingEnabled: false
-    },
-    {
-      id: "metodologias_ageis",
-      title: "Scrum e Kanban",
-      subtitle: "Gestão Ágil para Resultados Rápidos",
-      summary: "Uma introdução prática aos frameworks ágeis mais usados no mercado para gestão de tarefas.",
-      fullDescription: "Cansado de projetos que se arrastam? Deyse Pereira apresenta os fundamentos do Scrum (Sprints, Papéis) e do Kanban (Fluxo Contínuo, WIP) para otimizar a produtividade da sua equipa.",
-      targetAudience: "Gestores de projeto, equipas de desenvolvimento, e equipas administrativas que queiram melhorar o seu fluxo de trabalho.",
-      themeColor: "#0066cc", // Brand Blue
-      themeColorDark: "#004c99",
-      icon: "fa-tasks",
-      status: "em_breve",
-      headerOverlayImage: "https://placehold.co/600x400/0066cc/white?text=Scrum+e+Kanban",
-      details: {"Data": "A Definir", "Carga": "3 horas", "Modalidade": "Presencial"},
-      learningObjectives: [
-        "Diferenciar Scrum e Kanban",
-        "Implementar um quadro Kanban simples",
-        "Entender o ciclo de uma Sprint"
-      ],
-      modules: [
-        { "title": "Módulo 1: Scrum", "topics": ["Papéis (PO, SM, Dev Team)", "Eventos (Sprint, Planning, Daily, Review)", "Artefatos"]},
-        { "title": "Módulo 2: Kanban", "topics": ["Princípios do Kanban", "Métricas (Lead Time, Cycle Time)", "WIP (Work In Progress)"]}
-      ],
-      practicalActivities: [],
-      requirements: ["Não há pré-requisitos."],
-      instructors: [ instMap.deyse ],
-      isRatingEnabled: false
-    },
-    {
-      id: "gestao_notion",
-      title: "Gestão de Projetos c/ Notion",
-      subtitle: "O Seu Segundo Cérebro Organizacional",
-      summary: "Configure um dashboard de gestão de projetos no Notion, integrando tarefas, documentos e cronogramas.",
-      fullDescription: "O Notion é a ferramenta 'tudo-em-um' para organização. Vinícius Sena vai mostrar como sair do zero e construir um sistema robusto para gerir projetos, equipas e conhecimento pessoal de forma integrada.",
-      targetAudience: "Gestores de projeto, equipas de marketing, e qualquer pessoa que queira organizar melhor o seu trabalho.",
-      themeColor: "#333333", // Dark Grey/Notion Black
-      themeColorDark: "#1a1a1a",
-      icon: "fa-check-square",
-      status: "em_breve",
-      headerOverlayImage: "https://placehold.co/600x400/333333/white?text=Notion",
-      details: {"Data": "A Definir", "Carga": "4 horas", "Modalidade": "Online"},
-      learningObjectives: [
-        "Criar e relacionar bases de dados (Databases)",
-        "Configurar um cronograma (Timeline)",
-        "Criar templates de páginas"
-      ],
-      modules: [
-        { "title": "Módulo 1: Fundamentos", "topics": ["Blocos, Páginas e Bases de Dados", "Vistas (Views) de Bases de Dados"]},
-        { "title": "Módulo 2: Gestão de Projetos", "topics": ["Criando o Master Dashboard", "Relacionando Tarefas e Projetos", "Templates e Automação"]}
-      ],
-      practicalActivities: [],
-      requirements: ["Conta gratuita no Notion", "Computador portátil."],
-      instructors: [ instMap.vinicius ],
-      isRatingEnabled: false
-    },
-    {
-      id: "trafego_pago",
-      title: "Marketing Estratégico: Tráfego Pago",
-      subtitle: "Anúncios Práticos no Meta Ads",
-      summary: "Aprenda a criar, segmentar e otimizar campanhas de tráfego pago no Facebook e Instagram Ads.",
-      fullDescription: "Não basta criar conteúdo, é preciso fazê-lo chegar às pessoas certas. Marllon Costa vai guiar-vos pelo Gerenciador de Anúncios do Meta, desde a configuração do pixel até à análise de métricas de conversão.",
-      targetAudience: "Equipa de comunicação, marketing e gestores interessados em promover eventos e projetos.",
-      themeColor: "#1877F2", // Facebook Blue
-      themeColorDark: "#125bbf",
-      icon: "fa-bullhorn",
-      status: "em_breve",
-      headerOverlayImage: "https://placehold.co/600x400/1877F2/white?text=Meta+Ads",
-      details: {"Data": "A Definir", "Carga": "4 horas", "Modalidade": "Online"},
-      learningObjectives: [
-        "Entender a estrutura de campanhas (Campanha, Conjunto, Anúncio)",
-        "Segmentar públicos (Interesses, Lookalike, Remarketing)",
-        "Analisar métricas (CPC, CTR, CPA)"
-      ],
-      modules: [
-        { "title": "Módulo 1: Estratégia", "topics": ["Objetivos de Campanha", "Configuração do Pixel", "Públicos"]},
-        { "title": "Módulo 2: Execução", "topics": ["Criando o primeiro anúncio", "Testes A/B", "Análise de Métricas e Otimização"]}
-      ],
-      practicalActivities: [],
-      requirements: ["Acesso a uma conta de anúncios do Meta (Facebook)."],
-      instructors: [ instMap.marllon ],
-      isRatingEnabled: false
-    }
-  ];
-  
-  return { initialCourses, initialInstructors };
-}
-
 
 // === GESTÃO DE MODAIS (Genérico) ===
 
+// Abrir Modal
 function _openModal(modal) {
   if (!modal) return;
   modal.classList.add('show');
 }
 
+// Fechar Modal
 function _closeModal(modal) {
   if (!modal) return;
   modal.classList.remove('show');
 }
 
+// Fechar ao clicar no backdrop
 document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) {
@@ -1966,6 +1503,7 @@ document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
   });
 });
 
+// Botões de fechar específicos
 document.getElementById('closeLogin')?.addEventListener('click', () => _closeModal(modalLogin));
 document.getElementById('closeEnroll')?.addEventListener('click', () => _closeModal(modalEnroll));
 document.getElementById('closeEnrollSuccess')?.addEventListener('click', () => _closeModal(modalEnrollSuccess));
@@ -1975,10 +1513,6 @@ document.getElementById('closeEditCourse')?.addEventListener('click', () => _clo
 document.getElementById('courseFormCancel')?.addEventListener('click', () => _closeModal(modalEditCourse));
 document.getElementById('closeEditInstructor')?.addEventListener('click', () => _closeModal(modalEditInstructor));
 document.getElementById('instructorFormCancel')?.addEventListener('click', () => _closeModal(modalEditInstructor));
-
-// ADICIONADO: Handlers do Modal de Privacidade
-document.getElementById('closePrivacy')?.addEventListener('click', () => _closeModal(modalPrivacyPolicy));
-document.getElementById('closePrivacyBtn')?.addEventListener('click', () => _closeModal(modalPrivacyPolicy));
 
 
 // Animação de Scroll (Reveal)
@@ -2027,15 +1561,21 @@ document.getElementById('logo-link').addEventListener('click', (e) => {
   showView('main');
 });
 
-// ATUALIZADO: Link Política de Privacidade (Rodapé)
+// Link Política de Privacidade (placeholder)
 document.getElementById('privacy-policy-link').addEventListener('click', (e) => {
   e.preventDefault();
-  _openModal(modalPrivacyPolicy);
+  showToast("Página de Política de Privacidade ainda não implementada.", "error");
 });
 
-// ADICIONADO: Link Política de Privacidade (Modal de Inscrição)
-document.getElementById('open-privacy-enroll')?.addEventListener('click', (e) => {
-  e.preventDefault();
-  _openModal(modalPrivacyPolicy);
+// Carregar dados do gráfico no início (apenas se for admin)
+onAuthStateChanged(auth, (user) => {
+  if (user && !user.isAnonymous) {
+    checkAdminStatus(user.uid).then(() => {
+      if (isAdmin) {
+        renderEnrollmentsChart();
+        renderRatingsChart();
+        updateRecentComments();
+      }
+    });
+  }
 });
-
