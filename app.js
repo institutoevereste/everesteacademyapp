@@ -18,10 +18,9 @@
     const { jsPDF } = window.jspdf;
 
     // === UTILS ===
-    const formatCurrency = (val) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(val);
     const formatDate = (timestamp) => timestamp ? new Date(timestamp.seconds * 1000).toLocaleDateString('pt-PT') : 'N/A';
 
-    // === COMPONENTES UI ===
+    // === COMPONENTES UI GERAIS ===
     
     // Header
     const Header = ({ user, isAdmin, onAdminClick, onLogout, goHome }) => (
@@ -59,7 +58,7 @@
       </section>
     );
 
-    // About Section (Com Nova Galeria)
+    // About Section
     const AboutSection = ({ images }) => (
       <section className="py-20 px-6 bg-slate-50">
         <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
@@ -128,7 +127,6 @@
     // Course Detail View
     const CourseDetail = ({ course, onBack, user, onEnroll, checkins }) => {
       const hasCheckedIn = checkins[course.id];
-      // Regras de bloqueio
       const canCheckin = course.isCheckinEnabled === true;
       const canRate = course.isRatingEnabled === true && hasCheckedIn;
 
@@ -137,7 +135,6 @@
 
       return (
         <div className="animate-fade-in pb-20">
-          {/* Hero do Curso */}
           <div className="relative py-20 bg-slate-900 text-white">
             <div className="absolute inset-0 opacity-20 bg-cover bg-center" style={{ backgroundImage: `url(${course.headerOverlayImage})` }}></div>
             <div className="container mx-auto px-6 relative z-10">
@@ -148,10 +145,20 @@
           </div>
 
           <div className="container mx-auto px-6 -mt-10 relative z-20 grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-8">
               <h3 className="text-2xl font-bold mb-4 text-slate-800">Sobre o Curso</h3>
               <p className="text-slate-600 mb-8 whitespace-pre-line">{course.fullDescription}</p>
+
+              {course.learningObjectives && course.learningObjectives.length > 0 && (
+                <>
+                  <h3 className="text-xl font-bold mb-4 text-slate-800">Objetivos de Aprendizagem</h3>
+                  <ul className="mb-8 space-y-2">
+                    {course.learningObjectives.map((obj, i) => (
+                      <li key={i} className="flex gap-2"><i className="fas fa-check text-green-500 mt-1"></i> {obj}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
               <h3 className="text-xl font-bold mb-4 text-slate-800">Conteúdo</h3>
               <div className="space-y-4 mb-8">
@@ -166,7 +173,6 @@
               </div>
             </div>
 
-            {/* Sidebar Actions */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
                 <div className="mb-6 space-y-3">
@@ -197,21 +203,17 @@
                 >
                   <i className="fas fa-star mr-2"></i>Avaliar
                 </button>
-
-                {!canCheckin && !hasCheckedIn && <p className="text-xs text-center text-red-400 mt-2">Check-in bloqueado pelo instrutor.</p>}
-                {!canRate && hasCheckedIn && <p className="text-xs text-center text-orange-400 mt-2">Avaliação disponível após liberação.</p>}
               </div>
             </div>
           </div>
 
-          {/* Modais Internos */}
           {showCheckinModal && <CheckinModal course={course} user={user} onClose={() => setShowCheckinModal(false)} />}
           {showRatingModal && <RatingModal course={course} user={user} onClose={() => setShowRatingModal(false)} />}
         </div>
       );
     };
 
-    // === MODAIS ===
+    // === MODAIS (ALUNO) ===
     const ModalWrapper = ({ title, onClose, children }) => (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
@@ -226,7 +228,6 @@
 
     const EnrollModal = ({ course, user, onClose, onSuccess }) => {
       const [loading, setLoading] = useState(false);
-      
       const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -242,18 +243,12 @@
           createdAt: serverTimestamp(),
           protocol: 'EVR-' + Math.random().toString(36).substr(2, 8).toUpperCase()
         };
-
         try {
           await addDoc(collection(db, `artifacts/${appId}/public/data/enrollments`), data);
           onSuccess(data.protocol);
           onClose();
-        } catch (error) {
-          alert('Erro ao inscrever: ' + error.message);
-        } finally {
-          setLoading(false);
-        }
+        } catch (error) { alert('Erro: ' + error.message); } finally { setLoading(false); }
       };
-
       return (
         <ModalWrapper title={`Inscrição: ${course.title}`} onClose={onClose}>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -265,9 +260,7 @@
               <label className="flex gap-2"><input type="checkbox" required /> Concordo com o uso de imagem.</label>
               <label className="flex gap-2"><input type="checkbox" required /> Aceito a política de privacidade.</label>
             </div>
-            <button disabled={loading} className="w-full btn-primary mt-4">
-              {loading ? 'Processando...' : 'Confirmar Inscrição'}
-            </button>
+            <button disabled={loading} className="w-full btn-primary mt-4">{loading ? '...' : 'Confirmar'}</button>
           </form>
         </ModalWrapper>
       );
@@ -278,18 +271,15 @@
         e.preventDefault();
         const pwd = e.target.password.value;
         try {
-            // A validação de senha real deve ser feita nas Security Rules, mas simulamos aqui o envio
             await addDoc(collection(db, `artifacts/${appId}/public/data/checkins`), {
                 userId: user.uid,
                 courseId: course.id,
                 password: pwd,
                 createdAt: serverTimestamp()
             });
-            alert('Check-in realizado com sucesso!');
-            window.location.reload(); // Recarrega para atualizar estado
-        } catch (err) {
-            alert('Erro ou Senha incorreta.');
-        }
+            alert('Check-in realizado!');
+            window.location.reload(); 
+        } catch (err) { alert('Erro ou Senha incorreta.'); }
       };
       return (
           <ModalWrapper title="Realizar Check-in" onClose={onClose}>
@@ -331,22 +321,102 @@
         )
     };
 
-    // === ADMIN PANEL ===
-    const AdminPanel = ({ courses, enrollments, instructors, aboutImages, onUpdateCourse, onDeleteCourse, onAddImage, onDeleteImage }) => {
+    // === ADMIN PANEL COMPONENTES ROBUSTOS ===
+
+    // Componente de Gráficos do Dashboard
+    const DashboardCharts = ({ enrollments, ratings }) => {
+      const enrollmentsChartRef = useRef(null);
+      const ratingsChartRef = useRef(null);
+      const enrollCanvas = useRef(null);
+      const ratingCanvas = useRef(null);
+
+      useEffect(() => {
+        // Gráfico de Matrículas
+        if (enrollCanvas.current && enrollments.length > 0) {
+           if (enrollmentsChartRef.current) enrollmentsChartRef.current.destroy();
+           
+           const dataByDate = {};
+           enrollments.forEach(e => {
+             const date = e.createdAt ? new Date(e.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+             dataByDate[date] = (dataByDate[date] || 0) + 1;
+           });
+           
+           enrollmentsChartRef.current = new window.Chart(enrollCanvas.current, {
+             type: 'line',
+             data: {
+               labels: Object.keys(dataByDate),
+               datasets: [{
+                 label: 'Novas Matrículas',
+                 data: Object.values(dataByDate),
+                 borderColor: '#0066cc',
+                 backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                 fill: true
+               }]
+             },
+             options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+           });
+        }
+
+        // Gráfico de Avaliações
+        if (ratingCanvas.current && ratings.length > 0) {
+           if (ratingsChartRef.current) ratingsChartRef.current.destroy();
+           
+           // Agrupar médias (simulado, pois ratingsCollection pode não ter nome de instrutor normalizado)
+           const avg = ratings.reduce((acc, r) => acc + r.rating, 0) / ratings.length;
+           
+           ratingsChartRef.current = new window.Chart(ratingCanvas.current, {
+             type: 'bar',
+             data: {
+               labels: ['Média Geral'],
+               datasets: [{
+                 label: 'Satisfação (1-5)',
+                 data: [avg],
+                 backgroundColor: '#ffc857'
+               }]
+             },
+             options: { responsive: true, scales: { y: { beginAtZero: true, max: 5 } } }
+           });
+        }
+        
+        return () => {
+           if (enrollmentsChartRef.current) enrollmentsChartRef.current.destroy();
+           if (ratingsChartRef.current) ratingsChartRef.current.destroy();
+        }
+      }, [enrollments, ratings]);
+
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+           <div className="bg-white p-6 rounded-xl shadow h-80">
+              <h3 className="font-bold mb-4">Matrículas no Tempo</h3>
+              <canvas ref={enrollCanvas}></canvas>
+           </div>
+           <div className="bg-white p-6 rounded-xl shadow h-80">
+              <h3 className="font-bold mb-4">Satisfação Geral</h3>
+              <canvas ref={ratingCanvas}></canvas>
+           </div>
+        </div>
+      );
+    };
+
+    const AdminPanel = ({ 
+        courses, enrollments, instructors, aboutImages, ratings,
+        onUpdateCourse, onDeleteCourse, 
+        onAddImage, onDeleteImage,
+        onAddInstructor, onUpdateInstructor, onDeleteInstructor,
+        onDeleteEnrollment,
+        onPopulateDB 
+    }) => {
       const [activeTab, setActiveTab] = useState('dashboard');
       const [editingCourse, setEditingCourse] = useState(null);
+      const [editingInstructor, setEditingInstructor] = useState(null);
 
       // PDF Export
       const exportPDF = () => {
         const doc = new jsPDF();
         doc.text("Relatório Geral - Evereste Academy", 14, 20);
-        
-        // KPIs
         doc.setFontSize(10);
         doc.text(`Total Matrículas: ${enrollments.length}`, 14, 30);
-        doc.text(`Total Cursos: ${courses.length}`, 14, 35);
         
-        // Tabela Alunos
         const tableData = enrollments.map(e => [
              e.protocol || '-', e.name, e.courseName, e.sector
         ]);
@@ -365,25 +435,29 @@
             return (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                   <div className="bg-white p-6 rounded-xl shadow border border-blue-100">
+                   <div className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500">
                       <h3 className="text-gray-500 uppercase text-xs font-bold">Matrículas Totais</h3>
                       <p className="text-3xl font-bold text-blue-600">{enrollments.length}</p>
                    </div>
-                   <div className="bg-white p-6 rounded-xl shadow border border-green-100">
+                   <div className="bg-white p-6 rounded-xl shadow border-l-4 border-green-500">
                       <h3 className="text-gray-500 uppercase text-xs font-bold">Cursos Ativos</h3>
                       <p className="text-3xl font-bold text-green-600">{courses.filter(c => c.status === 'aberto').length}</p>
                    </div>
-                   <div className="bg-white p-6 rounded-xl shadow border border-purple-100">
-                      <h3 className="text-gray-500 uppercase text-xs font-bold">NPS Estimado</h3>
-                      <p className="text-3xl font-bold text-purple-600">92</p>
+                   <div className="bg-white p-6 rounded-xl shadow border-l-4 border-purple-500">
+                      <h3 className="text-gray-500 uppercase text-xs font-bold">Avaliações</h3>
+                      <p className="text-3xl font-bold text-purple-600">{ratings.length}</p>
                    </div>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold">Ações Rápidas</h3>
-                        <button onClick={exportPDF} className="btn-primary text-sm"><i className="fas fa-file-pdf mr-2"></i>Exportar Relatório PDF</button>
+                
+                <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow">
+                    <h3 className="font-bold">Ações Rápidas</h3>
+                    <div className="flex gap-2">
+                        <button onClick={exportPDF} className="btn-primary text-sm"><i className="fas fa-file-pdf mr-2"></i>Relatório PDF</button>
+                        <button onClick={onPopulateDB} className="btn-secondary text-sm"><i className="fas fa-database mr-2"></i>Popular DB</button>
                     </div>
                 </div>
+
+                <DashboardCharts enrollments={enrollments} ratings={ratings} />
               </div>
             );
           case 'courses':
@@ -399,7 +473,7 @@
                               <tr>
                                   <th className="p-4">Título</th>
                                   <th className="p-4">Status</th>
-                                  <th className="p-4">Check-in Lib.</th>
+                                  <th className="p-4">Check-in</th>
                                   <th className="p-4">Ações</th>
                               </tr>
                           </thead>
@@ -408,10 +482,10 @@
                                   <tr key={c.id} className="border-b hover:bg-gray-50">
                                       <td className="p-4 font-medium">{c.title}</td>
                                       <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${c.status === 'aberto' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{c.status}</span></td>
-                                      <td className="p-4 text-center">{c.isCheckinEnabled ? '✅' : '❌'}</td>
+                                      <td className="p-4">{c.isCheckinEnabled ? '✅' : '❌'}</td>
                                       <td className="p-4">
-                                          <button onClick={() => setEditingCourse(c)} className="text-blue-600 hover:underline mr-3">Editar</button>
-                                          <button onClick={() => onDeleteCourse(c.id)} className="text-red-600 hover:underline">Excluir</button>
+                                          <button onClick={() => setEditingCourse(c)} className="text-blue-600 hover:underline mr-3"><i className="fas fa-edit"></i></button>
+                                          <button onClick={() => onDeleteCourse(c.id)} className="text-red-600 hover:underline"><i className="fas fa-trash"></i></button>
                                       </td>
                                   </tr>
                               ))}
@@ -420,6 +494,72 @@
                   </div>
                </div>
             );
+          case 'instructors':
+            return (
+              <div>
+                  <div className="flex justify-between mb-4">
+                      <h2 className="text-2xl font-bold">Gerir Instrutores</h2>
+                      <button onClick={() => setEditingInstructor({})} className="btn-primary">Novo Instrutor</button>
+                  </div>
+                  <div className="bg-white rounded-xl shadow overflow-hidden">
+                      <table className="w-full text-left">
+                          <thead className="bg-gray-50 border-b">
+                              <tr>
+                                  <th className="p-4">Avatar</th>
+                                  <th className="p-4">Nome</th>
+                                  <th className="p-4">Título</th>
+                                  <th className="p-4">Ações</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {instructors.map(inst => (
+                                  <tr key={inst.id} className="border-b hover:bg-gray-50">
+                                      <td className="p-4"><img src={inst.image} className="w-10 h-10 rounded-full object-cover"/></td>
+                                      <td className="p-4 font-medium">{inst.name}</td>
+                                      <td className="p-4 text-sm text-gray-500">{inst.title}</td>
+                                      <td className="p-4">
+                                          <button onClick={() => setEditingInstructor(inst)} className="text-blue-600 hover:underline mr-3"><i className="fas fa-edit"></i></button>
+                                          <button onClick={() => onDeleteInstructor(inst.id)} className="text-red-600 hover:underline"><i className="fas fa-trash"></i></button>
+                                      </td>
+                                  </tr>
+                              ))}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+            );
+          case 'enrollments':
+             return (
+                 <div>
+                    <h2 className="text-2xl font-bold mb-4">Matrículas</h2>
+                    <div className="bg-white rounded-xl shadow overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b">
+                                <tr>
+                                    <th className="p-4">Protocolo</th>
+                                    <th className="p-4">Aluno</th>
+                                    <th className="p-4">Curso</th>
+                                    <th className="p-4">Setor</th>
+                                    <th className="p-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {enrollments.map(e => (
+                                    <tr key={e.id} className="border-b hover:bg-gray-50">
+                                        <td className="p-4 font-mono text-xs">{e.protocol}</td>
+                                        <td className="p-4">{e.name}</td>
+                                        <td className="p-4">{e.courseName}</td>
+                                        <td className="p-4 text-sm">{e.sector}</td>
+                                        <td className="p-4">
+                                            <button onClick={() => onDeleteEnrollment(e.id)} className="text-red-600 hover:underline"><i className="fas fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                 </div>
+             );
           case 'about_images':
              return (
                  <div>
@@ -456,6 +596,8 @@
                  {[
                      {id: 'dashboard', label: 'Dashboard', icon: 'chart-line'},
                      {id: 'courses', label: 'Cursos', icon: 'graduation-cap'},
+                     {id: 'instructors', label: 'Instrutores', icon: 'chalkboard-teacher'},
+                     {id: 'enrollments', label: 'Matrículas', icon: 'users'},
                      {id: 'about_images', label: 'Imagens Sobre', icon: 'images'},
                  ].map(item => (
                      <li key={item.id}>
@@ -476,19 +618,58 @@
            {editingCourse && (
              <CourseEditorModal 
                 course={editingCourse} 
+                instructors={instructors}
                 onClose={() => setEditingCourse(null)} 
                 onSave={onUpdateCourse} 
+             />
+           )}
+
+           {editingInstructor && (
+             <InstructorEditorModal
+                instructor={editingInstructor}
+                onClose={() => setEditingInstructor(null)}
+                onSave={info => {
+                    if (editingInstructor.id) onUpdateInstructor({...info, id: editingInstructor.id});
+                    else onAddInstructor(info);
+                    setEditingInstructor(null);
+                }}
              />
            )}
         </div>
       );
     };
 
-    // Modal Editor de Curso (Complexo)
-    const CourseEditorModal = ({ course, onClose, onSave }) => {
+    // Modal Editor de Instrutor
+    const InstructorEditorModal = ({ instructor, onClose, onSave }) => {
+       const handleSubmit = (e) => {
+           e.preventDefault();
+           const data = {
+               name: e.target.name.value,
+               title: e.target.title.value,
+               image: e.target.image.value,
+               bio: e.target.bio.value
+           };
+           onSave(data);
+       };
+       return (
+           <ModalWrapper title={instructor.id ? "Editar Instrutor" : "Novo Instrutor"} onClose={onClose}>
+               <form onSubmit={handleSubmit} className="space-y-4">
+                   <input name="name" defaultValue={instructor.name} placeholder="Nome" className="w-full border p-2 rounded" required />
+                   <input name="title" defaultValue={instructor.title} placeholder="Título (Ex: Designer)" className="w-full border p-2 rounded" required />
+                   <input name="image" defaultValue={instructor.image} placeholder="URL da Foto" className="w-full border p-2 rounded" required />
+                   <textarea name="bio" defaultValue={instructor.bio} placeholder="Biografia Curta" className="w-full border p-2 rounded" />
+                   <button className="w-full btn-primary">Salvar</button>
+               </form>
+           </ModalWrapper>
+       );
+    };
+
+    // Modal Editor de Curso Avançado (Dynamic Arrays)
+    const CourseEditorModal = ({ course, instructors, onClose, onSave }) => {
         const [formData, setFormData] = useState({
-            title: '', status: 'aberto', isCheckinEnabled: false, isRatingEnabled: false,
-            flickrLink: '', ...course
+            title: '', status: 'aberto', isCheckinEnabled: false, isRatingEnabled: false, flickrLink: '',
+            details: {}, learningObjectives: [], modules: [], instructors: [],
+            ...course
         });
 
         const handleChange = (e) => {
@@ -496,15 +677,51 @@
             setFormData({...formData, [e.target.name]: val});
         };
 
-        const handleSubmit = (e) => {
-            e.preventDefault();
-            onSave(formData);
-            onClose();
+        // Gestão de Arrays Simples (Objetivos)
+        const addObj = () => setFormData({...formData, learningObjectives: [...(formData.learningObjectives||[]), ""]});
+        const updateObj = (idx, val) => {
+            const newArr = [...formData.learningObjectives]; newArr[idx] = val;
+            setFormData({...formData, learningObjectives: newArr});
+        };
+        const removeObj = (idx) => {
+            const newArr = formData.learningObjectives.filter((_,i) => i !== idx);
+            setFormData({...formData, learningObjectives: newArr});
+        };
+
+        // Gestão de Módulos (Complexo)
+        const addMod = () => setFormData({...formData, modules: [...(formData.modules||[]), {title: "", topics: []}]});
+        const updateModTitle = (idx, val) => {
+            const newArr = [...formData.modules]; newArr[idx].title = val;
+            setFormData({...formData, modules: newArr});
+        };
+        const addTopic = (modIdx) => {
+             const newArr = [...formData.modules];
+             newArr[modIdx].topics = [...(newArr[modIdx].topics||[]), ""];
+             setFormData({...formData, modules: newArr});
+        };
+        const updateTopic = (modIdx, topIdx, val) => {
+             const newArr = [...formData.modules];
+             newArr[modIdx].topics[topIdx] = val;
+             setFormData({...formData, modules: newArr});
+        };
+        const removeMod = (idx) => {
+             const newArr = formData.modules.filter((_, i) => i !== idx);
+             setFormData({...formData, modules: newArr});
+        }
+
+        // Gestão de Instrutores (Seleção)
+        const toggleInstructor = (instId, instData) => {
+             const currentIds = (formData.instructors || []).map(i => i.id);
+             if (currentIds.includes(instId)) {
+                 setFormData({...formData, instructors: formData.instructors.filter(i => i.id !== instId)});
+             } else {
+                 setFormData({...formData, instructors: [...(formData.instructors||[]), instData]});
+             }
         };
 
         return (
             <ModalWrapper title={course.id ? "Editar Curso" : "Novo Curso"} onClose={onClose}>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); onClose(); }} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <input name="title" value={formData.title} onChange={handleChange} placeholder="Título" className="border p-2 rounded" required />
                         <select name="status" value={formData.status} onChange={handleChange} className="border p-2 rounded">
@@ -518,23 +735,63 @@
                     <textarea name="summary" value={formData.summary} onChange={handleChange} placeholder="Resumo" className="w-full border p-2 rounded h-20"></textarea>
                     <input name="headerOverlayImage" value={formData.headerOverlayImage} onChange={handleChange} placeholder="URL Imagem Capa" className="w-full border p-2 rounded" />
 
-                    {/* Campos Condicionais para CONCLUÍDO */}
-                    {formData.status === 'concluido' && (
-                        <div className="bg-orange-50 p-4 rounded border border-orange-200">
-                            <h4 className="font-bold text-orange-800 mb-2">Configurações de Conclusão</h4>
-                            <input name="flickrLink" value={formData.flickrLink || ''} onChange={handleChange} placeholder="Link Galeria Flickr" className="w-full border p-2 rounded" />
+                    {/* Módulos Dinâmicos */}
+                    <div className="bg-gray-50 p-3 rounded border">
+                        <h4 className="font-bold text-sm mb-2">Módulos do Curso</h4>
+                        {(formData.modules || []).map((mod, mIdx) => (
+                            <div key={mIdx} className="mb-3 pl-3 border-l-2 border-blue-400">
+                                <div className="flex gap-2 mb-2">
+                                    <input value={mod.title} onChange={(e) => updateModTitle(mIdx, e.target.value)} placeholder="Título do Módulo" className="flex-1 border p-1 text-sm rounded" />
+                                    <button type="button" onClick={() => removeMod(mIdx)} className="text-red-500"><i className="fas fa-trash"></i></button>
+                                </div>
+                                {(mod.topics || []).map((top, tIdx) => (
+                                    <input key={tIdx} value={top} onChange={(e) => updateTopic(mIdx, tIdx, e.target.value)} placeholder="Tópico" className="w-full border p-1 text-xs rounded mb-1 bg-white" />
+                                ))}
+                                <button type="button" onClick={() => addTopic(mIdx)} className="text-xs text-blue-600 underline">+ Tópico</button>
+                            </div>
+                        ))}
+                        <button type="button" onClick={addMod} className="text-sm btn-secondary py-1 px-3">+ Adicionar Módulo</button>
+                    </div>
+
+                    {/* Objetivos Dinâmicos */}
+                    <div className="bg-gray-50 p-3 rounded border">
+                        <h4 className="font-bold text-sm mb-2">Objetivos de Aprendizagem</h4>
+                        {(formData.learningObjectives || []).map((obj, i) => (
+                            <div key={i} className="flex gap-2 mb-1">
+                                <input value={obj} onChange={(e) => updateObj(i, e.target.value)} className="flex-1 border p-1 text-sm rounded" />
+                                <button type="button" onClick={() => removeObj(i)} className="text-red-500"><i className="fas fa-times"></i></button>
+                            </div>
+                        ))}
+                        <button type="button" onClick={addObj} className="text-xs text-blue-600 underline">+ Adicionar Objetivo</button>
+                    </div>
+
+                    {/* Seleção de Instrutores */}
+                    <div className="bg-gray-50 p-3 rounded border max-h-40 overflow-y-auto">
+                        <h4 className="font-bold text-sm mb-2">Instrutores</h4>
+                        <div className="space-y-1">
+                            {instructors.map(inst => (
+                                <label key={inst.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={(formData.instructors || []).some(i => i.id === inst.id)}
+                                        onChange={() => toggleInstructor(inst.id, inst)}
+                                    />
+                                    {inst.name}
+                                </label>
+                            ))}
                         </div>
+                    </div>
+
+                    {formData.status === 'concluido' && (
+                        <input name="flickrLink" value={formData.flickrLink || ''} onChange={handleChange} placeholder="Link Galeria Flickr" className="w-full border p-2 rounded bg-orange-50 border-orange-200" />
                     )}
 
-                    {/* Checkboxes de Controle */}
-                    <div className="flex gap-4 p-4 bg-gray-50 rounded border">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="isCheckinEnabled" checked={formData.isCheckinEnabled} onChange={handleChange} />
-                            Liberar Check-in
+                    <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm">
+                            <input type="checkbox" name="isCheckinEnabled" checked={formData.isCheckinEnabled} onChange={handleChange} /> Liberar Check-in
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="isRatingEnabled" checked={formData.isRatingEnabled} onChange={handleChange} />
-                            Liberar Avaliação
+                        <label className="flex items-center gap-2 cursor-pointer text-sm">
+                            <input type="checkbox" name="isRatingEnabled" checked={formData.isRatingEnabled} onChange={handleChange} /> Liberar Avaliação
                         </label>
                     </div>
 
@@ -551,20 +808,19 @@
     const App = () => {
       const [user, setUser] = useState(null);
       const [isAdmin, setIsAdmin] = useState(false);
-      const [view, setView] = useState('home'); // home, detail, admin
+      const [view, setView] = useState('home'); 
       const [selectedCourse, setSelectedCourse] = useState(null);
       const [courses, setCourses] = useState([]);
       const [enrollments, setEnrollments] = useState([]);
       const [aboutImages, setAboutImages] = useState([]);
+      const [instructors, setInstructors] = useState([]);
+      const [ratings, setRatings] = useState([]);
       const [userCheckins, setUserCheckins] = useState({});
 
-      // Initial Data Load
       useEffect(() => {
-        // Remove Loader
         document.getElementById('app-loader').classList.add('opacity-0');
         setTimeout(() => document.getElementById('app-loader').classList.add('hidden'), 500);
 
-        // Scroll Handler
         window.addEventListener('scroll', () => {
              const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
              const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -572,11 +828,9 @@
              document.getElementById('scroll-progress').style.width = scrolled + "%";
         });
 
-        // Auth Listener
         const unsubAuth = onAuthStateChanged(auth, async (u) => {
            setUser(u);
            if (u && !u.isAnonymous) {
-               // Check Admin
                try {
                    const adminDoc = await getDoc(doc(db, 'admins', u.uid));
                    setIsAdmin(adminDoc.exists());
@@ -587,20 +841,16 @@
            }
         });
 
-        // Data Listeners
-        const unsubCourses = onSnapshot(collection(db, `artifacts/${appId}/public/data/courses`), 
-          (snap) => setCourses(snap.docs.map(d => ({id: d.id, ...d.data()}))));
-        
-        const unsubEnroll = onSnapshot(collection(db, `artifacts/${appId}/public/data/enrollments`), 
-          (snap) => setEnrollments(snap.docs.map(d => ({id: d.id, ...d.data()}))));
-          
-        const unsubAbout = onSnapshot(collection(db, `artifacts/${appId}/public/data/about_images`), 
-          (snap) => setAboutImages(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+        // Listeners Globais
+        const unsubCourses = onSnapshot(collection(db, `artifacts/${appId}/public/data/courses`), (snap) => setCourses(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+        const unsubEnroll = onSnapshot(collection(db, `artifacts/${appId}/public/data/enrollments`), (snap) => setEnrollments(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+        const unsubAbout = onSnapshot(collection(db, `artifacts/${appId}/public/data/about_images`), (snap) => setAboutImages(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+        const unsubInst = onSnapshot(collection(db, `artifacts/${appId}/public/data/instructors`), (snap) => setInstructors(snap.docs.map(d => ({id: d.id, ...d.data()}))));
+        const unsubRatings = onSnapshot(collection(db, `artifacts/${appId}/public/data/ratings`), (snap) => setRatings(snap.docs.map(d => ({id: d.id, ...d.data()}))));
 
-        return () => { unsubAuth(); unsubCourses(); unsubEnroll(); unsubAbout(); };
+        return () => { unsubAuth(); unsubCourses(); unsubEnroll(); unsubAbout(); unsubInst(); unsubRatings(); };
       }, []);
 
-      // User Checkins Listener
       useEffect(() => {
           if (!user) return;
           const q = query(collection(db, `artifacts/${appId}/public/data/checkins`), where("userId", "==", user.uid));
@@ -611,7 +861,6 @@
           });
           return () => unsub();
       }, [user]);
-
 
       // Actions
       const handleLogin = async (email, password) => {
@@ -631,24 +880,60 @@
           if(confirm('Excluir curso?')) await deleteDoc(doc(db, `artifacts/${appId}/public/data/courses`, id));
       };
       
-      const handleAddAboutImage = async (url) => {
+      const handleAddImage = async (url) => {
           await addDoc(collection(db, `artifacts/${appId}/public/data/about_images`), { url, createdAt: serverTimestamp() });
       };
+      const handleDeleteImage = async (id) => await deleteDoc(doc(db, `artifacts/${appId}/public/data/about_images`, id));
 
-      const handleDeleteAboutImage = async (id) => {
-          await deleteDoc(doc(db, `artifacts/${appId}/public/data/about_images`, id));
+      const handleAddInstructor = async (data) => await addDoc(collection(db, `artifacts/${appId}/public/data/instructors`), data);
+      const handleUpdateInstructor = async (data) => {
+          const { id, ...info } = data;
+          await updateDoc(doc(db, `artifacts/${appId}/public/data/instructors`, id), info);
+      }
+      const handleDeleteInstructor = async (id) => {
+          if(confirm('Excluir instrutor?')) await deleteDoc(doc(db, `artifacts/${appId}/public/data/instructors`, id));
+      };
+      const handleDeleteEnrollment = async (id) => {
+          if(confirm('Excluir matrícula?')) await deleteDoc(doc(db, `artifacts/${appId}/public/data/enrollments`, id));
       };
 
-      // Navigation Logic
+      // Popular DB
+      const handlePopulateDB = async () => {
+          if(!confirm("Isso vai adicionar dados de teste. Continuar?")) return;
+          
+          const dummyInstructors = [
+              { name: "Bruno Diogo", title: "Designer", image: "https://i.postimg.cc/yNhgmLJK/IMG-7311.avif" },
+              { name: "Marllon Costa", title: "TI & Inovação", image: "https://i.postimg.cc/sxm4TVvF/IMG-9781.jpg" }
+          ];
+          const dummyCourse = {
+              title: "Workshop Fotografia",
+              subtitle: "O Olhar que Conecta",
+              status: "aberto",
+              themeColor: "#FFC107",
+              headerOverlayImage: "https://i.postimg.cc/3rLTy2xn/medium-shot-people-with-camera.jpg",
+              summary: "Aprenda a capturar a essência dos projetos.",
+              fullDescription: "Curso completo de fotografia.",
+              isCheckinEnabled: true,
+              modules: [{title: "Básico", topics: ["Luz", "Enquadramento"]}],
+              instructors: dummyInstructors
+          };
+          
+          try {
+             for(const inst of dummyInstructors) await addDoc(collection(db, `artifacts/${appId}/public/data/instructors`), inst);
+             await addDoc(collection(db, `artifacts/${appId}/public/data/courses`), dummyCourse);
+             alert("Dados inseridos!");
+          } catch(e) { alert("Erro: " + e.message); }
+      };
+
       if (view === 'admin' && isAdmin) {
          return <AdminPanel 
-                    courses={courses} 
-                    enrollments={enrollments} 
-                    aboutImages={aboutImages}
-                    onUpdateCourse={handleUpdateCourse}
-                    onDeleteCourse={handleDeleteCourse}
-                    onAddImage={handleAddAboutImage}
-                    onDeleteImage={handleDeleteAboutImage}
+                    courses={courses} enrollments={enrollments} instructors={instructors}
+                    aboutImages={aboutImages} ratings={ratings}
+                    onUpdateCourse={handleUpdateCourse} onDeleteCourse={handleDeleteCourse}
+                    onAddImage={handleAddImage} onDeleteImage={handleDeleteImage}
+                    onAddInstructor={handleAddInstructor} onUpdateInstructor={handleUpdateInstructor} onDeleteInstructor={handleDeleteInstructor}
+                    onDeleteEnrollment={handleDeleteEnrollment}
+                    onPopulateDB={handlePopulateDB}
                 />;
       }
 
@@ -676,9 +961,7 @@
           {view === 'home' && (
             <>
               <Hero />
-              
               <main className="container mx-auto px-6 py-16 space-y-20">
-                {/* ABERTOS */}
                 <section id="cursos">
                   <h2 className="text-3xl font-bold mb-8 border-l-4 border-blue-600 pl-4 text-slate-800">Cursos Disponíveis</h2>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -688,7 +971,6 @@
                   </div>
                 </section>
 
-                {/* EM BREVE */}
                 {soonCourses.length > 0 && (
                   <section>
                     <h2 className="text-3xl font-bold mb-8 border-l-4 border-yellow-400 pl-4 text-slate-800">Em Breve</h2>
@@ -703,20 +985,17 @@
                   </section>
                 )}
 
-                {/* CONCLUÍDOS */}
                 {completedCourses.length > 0 && (
                    <section>
                       <h2 className="text-3xl font-bold mb-8 border-l-4 border-green-500 pl-4 text-slate-800">Realizados</h2>
                       <div className="grid md:grid-cols-4 gap-6">
                          {completedCourses.map(c => (
                              <CourseCard key={c.id} course={c} onClick={() => {}} /> 
-                             // onClick vazio pois o card trata o clique no botão
                          ))}
                       </div>
                    </section>
                 )}
               </main>
-
               <AboutSection images={aboutImages} />
             </>
           )}
@@ -726,7 +1005,7 @@
                 course={selectedCourse} 
                 onBack={() => setView('home')} 
                 user={user}
-                onEnroll={() => { document.querySelector('#enroll-trigger')?.click() }} // Lógica simplificada
+                onEnroll={() => { document.querySelector('#enroll-trigger')?.click() }} 
                 checkins={userCheckins}
             />
           )}
@@ -740,7 +1019,6 @@
       );
     };
 
-    // Renderização
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   }
