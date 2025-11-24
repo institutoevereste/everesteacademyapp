@@ -340,7 +340,7 @@ const HomeView = ({ courses, completedCourses, aboutImages, onCourseClick }) => 
                 )}
             </section>
 
-            {/* NOVA SEÇÃO: Sobre o Evereste Academy */}
+            {/* SEÇÃO SOBRE */}
             <section className="py-20 bg-white border-t border-slate-100">
                 <div className="container mx-auto px-6">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -372,7 +372,7 @@ const HomeView = ({ courses, completedCourses, aboutImages, onCourseClick }) => 
                 </div>
             </section>
 
-            {/* NOVA SEÇÃO: Cursos Concluídos */}
+            {/* SEÇÃO CURSOS CONCLUÍDOS */}
             {completedCourses.length > 0 && (
                 <section className="py-20 bg-slate-50 border-t border-slate-200">
                     <div className="container mx-auto px-6">
@@ -421,7 +421,6 @@ const CourseDetailView = ({ course, user, hasCheckedIn, onBack, setUserCheckins 
 
     return (
         <div className="animate-fade-in bg-slate-50 min-h-screen pb-20">
-            {/* ... Header e Conteúdo ... */}
             <div className="relative pt-32 pb-20 px-6 overflow-hidden" style={{ background: `linear-gradient(to right, ${course.themeColor}, ${course.themeColorDark || course.themeColor})` }}>
                 <div className="absolute inset-0 opacity-20 bg-cover bg-center" style={{ backgroundImage: `url(${course.headerOverlayImage})` }}></div>
                 <div className="container mx-auto relative z-10 text-white">
@@ -436,7 +435,6 @@ const CourseDetailView = ({ course, user, hasCheckedIn, onBack, setUserCheckins 
             <div className="container mx-auto px-6 -mt-10 relative z-20">
                 <div className="grid lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-lg">
-                        {/* ... Seções de Conteúdo (Objetivos, Módulos, etc) - IDÊNTICO AO ANTERIOR ... */}
                         <h2 className="text-2xl font-bold mb-4">Sobre o Curso</h2>
                         <p className="text-slate-600 leading-relaxed mb-8 whitespace-pre-line">{course.fullDescription}</p>
 
@@ -509,7 +507,6 @@ const CourseDetailView = ({ course, user, hasCheckedIn, onBack, setUserCheckins 
                                     <i className="fas fa-paper-plane mr-2"></i> Inscrever-se
                                 </button>
 
-                                {/* LÓGICA DE CHECK-IN E AVALIAÇÃO ATUALIZADA */}
                                 {hasCheckedIn ? (
                                     <>
                                         <button disabled className="w-full py-3 rounded-lg font-bold bg-slate-200 text-slate-500 cursor-not-allowed">
@@ -646,11 +643,7 @@ const AdminNavLink = ({ icon, label, active, onClick }) => (
 
 // --- Sub-componentes Admin ---
 
-// ... AdminDashboard, AdminEnrollments, AdminInstructors (Mesmo código, sem alterações necessárias) ...
 const AdminDashboard = ({ courses, instructors }) => {
-    // ... código do dashboard mantido ...
-    // Como não houve alteração no Dashboard, omitindo para brevidade, mas deve estar aqui completo
-    // Vou reinserir o dashboard completo para garantir o arquivo funcional
     const [stats, setStats] = React.useState({ enrollments: 0, checkins: 0, nps: 0 });
     const [enrollmentData, setEnrollmentData] = React.useState({ labels: [], datasets: [] });
     const [ratingsData, setRatingsData] = React.useState({ labels: [], datasets: [] });
@@ -721,11 +714,148 @@ const AdminDashboard = ({ courses, instructors }) => {
     }, []);
 
     const exportCompleteReport = async () => {
-        // ... lógica de exportação mantida ...
-        // Simplificando para não estourar o tamanho, a lógica está idêntica ao anterior
         setIsExporting(true);
-        // (Lógica de exportação omitida para brevidade, mas deve ser mantida do arquivo anterior)
-        setTimeout(() => setIsExporting(false), 1000); 
+        try {
+            const doc = new window.jspdf.jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const today = new Date().toLocaleDateString('pt-PT');
+
+            // Buscar todos os dados atualizados
+            const [enrSnap, chkSnap, ratSnap] = await Promise.all([
+                getDocs(getCol('enrollments')),
+                getDocs(getCol('checkins')),
+                getDocs(getCol('ratings'))
+            ]);
+
+            const enrollments = enrSnap.docs.map(d => d.data());
+            const checkins = chkSnap.docs.map(d => d.data());
+            const ratings = ratSnap.docs.map(d => d.data());
+
+            // --- PÁGINA 1: CAPA E DASHBOARD ---
+            
+            // Cabeçalho Azul
+            doc.setFillColor(0, 102, 204); 
+            doc.rect(0, 0, pageWidth, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Relatório Executivo - Evereste Academy", 14, 20);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Gerado em ${today}`, 14, 30);
+
+            // KPIs Principais
+            doc.setTextColor(0, 0, 0);
+            let yPos = 60;
+            doc.setFontSize(14);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Visão Geral", 14, yPos);
+            yPos += 10;
+
+            const totalEnrollments = enrollments.length;
+            const totalCheckins = checkins.length;
+            let promoters = 0, detractors = 0;
+            ratings.forEach(r => { if(r.rating === 5) promoters++; if(r.rating <= 3) detractors++; });
+            const nps = ratings.length > 0 ? Math.round(((promoters - detractors) / ratings.length) * 100) : 0;
+
+            const drawCard = (x, label, value, color) => {
+                doc.setDrawColor(220);
+                doc.setFillColor(250);
+                doc.roundedRect(x, yPos, 55, 35, 3, 3, 'FD');
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(label, x + 5, yPos + 10);
+                doc.setFontSize(18);
+                doc.setTextColor(color[0], color[1], color[2]);
+                doc.setFont('helvetica', 'bold');
+                doc.text(String(value), x + 5, yPos + 25);
+            };
+
+            drawCard(14, "TOTAL MATRÍCULAS", totalEnrollments, [0, 102, 204]);
+            drawCard(80, "TOTAL CHECK-INS", totalCheckins, [0, 168, 150]);
+            drawCard(146, "NPS SCORE", nps, [106, 76, 147]);
+
+            yPos += 50;
+
+            // Tabela Performance por Curso
+            doc.setFontSize(14);
+            doc.setTextColor(0);
+            doc.text("Desempenho por Curso", 14, yPos);
+            yPos += 6;
+
+            const courseStats = courses.map(c => {
+                const cEnr = enrollments.filter(e => e.courseId === c.id).length;
+                const cChk = checkins.filter(k => k.courseId === c.id).length;
+                const cRats = ratings.filter(r => r.courseId === c.id);
+                const avgRat = cRats.length ? (cRats.reduce((a,b)=>a+b.rating,0)/cRats.length).toFixed(1) : "N/A";
+                return [c.title, cEnr, cChk, avgRat];
+            });
+
+            doc.autoTable({
+                startY: yPos,
+                head: [['Curso', 'Matrículas', 'Check-ins', 'Média Avaliação']],
+                body: courseStats,
+                theme: 'grid',
+                headStyles: { fillColor: [0, 102, 204] },
+                styles: { fontSize: 10 }
+            });
+
+            // --- PÁGINA 2: FEEDBACKS ---
+            doc.addPage();
+            doc.text("Feedbacks e Comentários Recentes", 14, 20);
+
+            const feedbackRows = ratings
+                .filter(r => r.comment)
+                .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
+                .map(r => [
+                    r.instructorName || '-',
+                    r.rating + ' ★',
+                    r.comment,
+                    r.createdAt ? new Date(r.createdAt.seconds*1000).toLocaleDateString('pt-PT') : '-'
+                ]);
+
+            doc.autoTable({
+                startY: 25,
+                head: [['Instrutor', 'Nota', 'Comentário', 'Data']],
+                body: feedbackRows,
+                theme: 'striped',
+                headStyles: { fillColor: [255, 193, 7], textColor: [50,50,50] },
+                columnStyles: { 2: { cellWidth: 90 } },
+                styles: { fontSize: 9 }
+            });
+
+            // --- PÁGINA 3: LISTA DE ALUNOS ---
+            doc.addPage();
+            doc.text("Lista Completa de Matrículas", 14, 20);
+
+            const studentRows = enrollments
+                .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
+                .map(e => [
+                    e.protocol || '-',
+                    e.name,
+                    e.courseName,
+                    e.email,
+                    e.sector,
+                    e.createdAt ? new Date(e.createdAt.seconds*1000).toLocaleDateString('pt-PT') : '-'
+                ]);
+
+            doc.autoTable({
+                startY: 25,
+                head: [['Protocolo', 'Nome', 'Curso', 'Email', 'Setor', 'Data']],
+                body: studentRows,
+                theme: 'grid',
+                headStyles: { fillColor: [60, 60, 60] },
+                styles: { fontSize: 8 }
+            });
+
+            doc.save(`Relatorio_Evereste_Completo_${Date.now()}.pdf`);
+
+        } catch (err) {
+            console.error("Erro exportação:", err);
+            alert("Erro ao gerar relatório.");
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     return (
@@ -762,6 +892,20 @@ const AdminDashboard = ({ courses, instructors }) => {
                     <div className="h-64">
                         {ratingsData.labels.length > 0 && <DashboardChart id="chart2" type="bar" data={ratingsData} options={{responsive:true, maintainAspectRatio:false, scales:{y:{max:5}}}} />}
                     </div>
+                </div>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h3 className="font-bold mb-4">Feedback Recente</h3>
+                <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
+                    {comments.map((c, i) => (
+                        <div key={i} className="border-b border-slate-50 pb-2 last:border-0">
+                            <div className="flex justify-between">
+                                <span className="font-bold text-sm text-slate-700">{c.instructorName}</span>
+                                <span className="text-xs text-yellow-500">{Array(c.rating).fill('★').join('')}</span>
+                            </div>
+                            <p className="text-sm text-slate-500 italic">"{c.comment}"</p>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
