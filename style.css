@@ -21,7 +21,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Scroll Progress Bar (Adicionado) */
+/* Scroll Progress Bar */
 #scroll-progress {
     position: fixed;
     top: 0;
@@ -113,7 +113,6 @@ body {
     overflow-y: auto;
     background: #f8fafc;
     position: relative;
-    /* width: 100%;  Garante que o conteúdo não estoure */
 }
 
 /* Tabelas Responsivas */
