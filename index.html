@@ -3,328 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Evereste Academy</title>
+  <title>Evereste Academy - React</title>
+  
+  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
+  
+  <!-- Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Chart.js para gráficos -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Libs Externas -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- jsPDF para exportação de relatórios -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- React & Babel Standalone -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 
-<body class="antialiased">
-  <!-- Container de Notificações Toast -->
-  <div id="toast-container"></div>
+<body class="antialiased bg-slate-50 text-slate-900">
   
-  <!-- Scroll Progress Bar -->
-  <div id="scroll-progress"></div>
+  <!-- Root do React -->
+  <div id="root"></div>
 
-  <!-- Header -->
-  <header id="header" class="header-glass">
-    <div class="container mx-auto px-6 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <a href="#" id="logo-link" class="cursor-pointer">
-          <img src="https://i.postimg.cc/hvvWCwnk/Prancheta-1-1.png" alt="Logo LIDS" class="h-10 w-auto" />
-        </a>
-      </div>
-      <div class="flex items-center gap-4">
-        <button id="adminBtnHeader" class="btn-ghost text-sm"><i class="fas fa-lock mr-2"></i>Admin</button>
-        <button id="logoutBtnHeader" class="btn-danger text-sm hidden"><i class="fas fa-right-from-bracket mr-2"></i>Logout</button>
-      </div>
-    </div>
-  </header>
+  <!-- Aplicação React Principal -->
+  <!-- O atributo data-type="module" permite imports ES6 dentro do Babel -->
+  <script type="text/babel" data-type="module" src="app.js"></script>
 
-  <!-- Main View (Course List) -->
-  <div id="main-view">
-    <!-- Hero -->
-    <section class="hero relative text-white">
-      <div class="relative z-10 container mx-auto px-6 py-24 md:py-32">
-        <div class="reveal max-w-3xl">
-          <span class="badge mb-5" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;"><i class="fa-solid fa-bolt"></i> Inscrições Abertas</span>
-          <h1 class="text-5xl md:text-7xl font-black leading-tight mb-4" style="color: white;">Evereste Academy</h1>
-          <p class="text-lg md:text-xl text-slate-200 max-w-2xl mb-8">Formações práticas e focadas em resultados para elevar a excelência do Instituto Evereste. Profissionalismo, dinamismo e tecnologia a favor do seu desenvolvimento.</p>
-          <div class="flex items-center gap-4 flex-wrap">
-            <a href="#cursos" class="btn-primary"><i class="fa-solid fa-graduation-cap mr-2"></i> Ver Cursos</a>
-          </div>
-        </div>
-      </div>
-      <div class="scroll-indicator text-white text-2xl">
-        <i class="fas fa-chevron-down"></i>
-      </div>
-      <div class="particles" id="particles"></div>
-      <img src="https://i.postimg.cc/4xNpxRZJ/capabannerlids.png" alt="Banner" class="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none" />
-    </section>
-
-    <!-- Cursos Disponíveis -->
-    <section id="cursos" class="section-light container mx-auto px-6 py-20 md:py-28 relative">
-      <div class="blur-blob" style="background: var(--brand-blue); top: -200px; right: -200px;"></div>
-      <div class="blur-blob" style="background: var(--brand-orange); bottom: -200px; left: -200px;"></div>
-      
-      <div class="reveal text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-black mb-4" style="color: var(--text);">Cursos Disponíveis</h2>
-        <p class="text-lg" style="color: var(--text-muted);">Inscrições abertas para as próximas turmas</p>
-      </div>
-      <div id="courses-list-open" class="grid md:grid-cols-2 gap-8 mb-20">
-        <p class="text-center md:col-span-2 text-gray-500">A carregar cursos...</p>
-      </div>
-
-      <div class="reveal">
-        <h3 class="text-3xl font-bold mb-8 text-center" style="color: var(--text);">Em Breve</h3>
-        <div id="courses-list-soon" class="grid md:grid-cols-3 gap-6">
-           <p class="text-center md:col-span-3 text-gray-500">A carregar futuros cursos...</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="border-t" style="border-color: var(--border); background: var(--surface);">
-      <div class="container mx-auto px-6 py-12">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div class="text-center md:text-left">
-            <p class="text-sm" style="color: var(--text-muted);">© 2025 Evereste Academy. Todos os direitos reservados.</p>
-          </div>
-          <div class="flex items-center gap-4">
-            <button id="adminBtnFooter" class="btn-ghost text-sm"><i class="fas fa-lock mr-2"></i>Acesso Admin</button>
-            <button id="logoutBtnFooter" class="btn-danger text-sm hidden"><i class="fas fa-right-from-bracket mr-2"></i>Logout</button>
-          </div>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Course Detail View -->
-  <div id="course-detail-view" class="hidden"></div>
-  
-  <!-- Admin Panel View -->
-  <div id="admin-panel-view" class="hidden">
-    <div id="admin-panel">
-      <!-- Botão Toggle Mobile -->
-      <button class="admin-mobile-toggle" id="adminMobileToggle">
-         <i class="fas fa-bars"></i>
-      </button>
-
-      <!-- Navegação Lateral -->
-      <nav id="admin-nav" class="flex flex-col flex-shrink-0 p-6">
-        <div class="mb-10 px-4 pt-3 flex justify-between items-center">
-          <h2 class="text-2xl font-bold text-slate-800">Painel Admin</h2>
-          <button id="adminMobileClose" class="md:hidden text-slate-500"><i class="fas fa-times"></i></button>
-        </div>
-        <a href="#dashboard" class="admin-nav-link active" data-target="admin-dashboard">
-          <i class="fa-solid fa-chart-line"></i> Dashboard
-        </a>
-        <a href="#cursos" class="admin-nav-link" data-target="admin-cursos">
-          <i class="fa-solid fa-graduation-cap"></i> Cursos
-        </a>
-        <a href="#matriculas" class="admin-nav-link" data-target="admin-matriculas">
-          <i class="fa-solid fa-users"></i> Matrículas
-        </a>
-        <a href="#instrutores" class="admin-nav-link" data-target="admin-instrutores">
-          <i class="fa-solid fa-chalkboard-user"></i> Instrutores
-        </a>
-        <div class="mt-auto">
-          <a href="#" id="admin-logout-nav" class="admin-nav-link !border-transparent hover:!bg-red-100 hover:!text-red-700">
-            <i class="fa-solid fa-right-from-bracket"></i> Sair
-          </a>
-          <p id="admin-user-email" class="text-xs text-center text-slate-500 mt-4 break-all"></p>
-        </div>
-      </nav>
-      
-      <!-- Conteúdo Principal do Admin -->
-      <main id="admin-content" class="p-10 overflow-y-auto w-full">
-        
-        <!-- Seção Dashboard -->
-        <section id="admin-dashboard" class="admin-section">
-          <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-             <h1 class="text-3xl font-bold">Dashboard</h1>
-          </div>
-          
-          <!-- KPIs -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="card-3d !p-6">
-              <h3 class="text-sm font-semibold text-gray-500 uppercase">Total Matrículas</h3>
-              <p id="stats-total-enrollments" class="text-3xl font-bold text-blue-600">0</p>
-            </div>
-            <div class="card-3d !p-6">
-              <h3 class="text-sm font-semibold text-gray-500 uppercase">Total Check-ins</h3>
-              <p id="stats-total-checkins" class="text-3xl font-bold text-teal-600">0</p>
-            </div>
-            <div class="card-3d !p-6">
-              <h3 class="text-sm font-semibold text-gray-500 uppercase">NPS (Estimado)</h3>
-              <p id="stats-nps-score" class="text-3xl font-bold text-purple-600">0</p>
-            </div>
-          </div>
-          
-          <!-- Gráficos -->
-          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-            <div class="card-3d !p-6 chart-container">
-              <h3 class="text-lg font-bold mb-4">Matrículas ao Longo do Tempo</h3>
-              <div style="height: 100%; min-height: 250px;">
-                <canvas id="enrollmentsChart"></canvas>
-              </div>
-            </div>
-            <div class="card-3d !p-6 chart-container">
-              <h3 class="text-lg font-bold mb-4">Média de Avaliação (Instrutores)</h3>
-              <div style="height: 100%; min-height: 250px;">
-                <canvas id="ratingsChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        <!-- Seção Cursos -->
-        <section id="admin-cursos" class="admin-section hidden">
-          <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <h1 class="text-3xl font-bold">Gestão de Cursos</h1>
-            <button id="admin-add-course-btn" class="btn-primary w-full md:w-auto"><i class="fas fa-plus mr-2"></i>Adicionar Curso</button>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Título</th>
-                  <th>Status</th>
-                  <th>Data</th>
-                  <th>Avaliação</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="admin-courses-table-body">
-                <!-- Linhas de cursos -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-        
-        <!-- Seção Matrículas -->
-        <section id="admin-matriculas" class="admin-section hidden">
-          <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <h1 class="text-3xl font-bold">Gestão de Matrículas</h1>
-            <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-              <select id="admin-enrollments-filter" class="admin-select !w-full md:!w-auto">
-                <option value="all">Todos os Cursos</option>
-              </select>
-              <button id="btn-export-enrollments-pdf" class="btn-secondary w-full md:w-auto"><i class="fas fa-file-pdf mr-2"></i>Exportar Lista</button>
-            </div>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table" id="enrollments-table">
-              <thead>
-                <tr>
-                  <th>Protocolo</th>
-                  <th>Aluno</th>
-                  <th>E-mail</th>
-                  <th>Curso</th>
-                  <th>Data</th>
-                  <th>Setor</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="admin-enrollments-table-body">
-                <!-- Linhas de matrículas -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-        
-        <!-- Seção Instrutores -->
-        <section id="admin-instrutores" class="admin-section hidden">
-          <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <h1 class="text-3xl font-bold">Gestão de Instrutores</h1>
-            <button id="admin-add-instructor-btn" class="btn-primary w-full md:w-auto"><i class="fas fa-plus mr-2"></i>Adicionar Instrutor</button>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Foto</th>
-                  <th>Nome</th>
-                  <th>Título</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="admin-instructors-table-body">
-                <!-- Linhas -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <!-- MODAIS (Mantidos da versão original, adicionei id para curso nome no checkin) -->
-  <div id="modalLogin" class="modal-backdrop">
-    <div class="modal-card modal-card-sm p-8">
-      <div class="flex justify-between mb-6">
-          <h3 class="text-2xl font-bold">Acesso Admin</h3>
-          <button id="closeLogin"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="loginForm" class="space-y-4">
-        <input id="loginEmail" type="email" class="admin-input" placeholder="admin@evereste.org" required />
-        <input id="loginPassword" type="password" class="admin-input" placeholder="••••••••" required />
-        <p id="loginError" class="text-red-600 text-sm hidden">Erro ao fazer login.</p>
-        <button type="submit" class="btn-primary w-full">Entrar</button>
-      </form>
-    </div>
-  </div>
-
-  <div id="modalCheckin" class="modal-backdrop">
-    <div class="modal-card modal-card-sm p-8 text-center">
-      <i class="fas fa-user-check text-6xl text-blue-500 mb-6"></i>
-      <h3 class="text-2xl font-bold">Confirmar Presença</h3>
-      <p class="text-base mt-2 mb-6 text-gray-600">Insira a senha fornecida no evento para confirmar.</p>
-      <form id="checkinForm">
-        <input type="text" id="checkinPassword" class="admin-input text-center mb-4" placeholder="Senha do Evento" required>
-        <p id="checkinError" class="text-red-600 text-sm hidden mb-4">Senha incorreta.</p>
-        <div class="flex gap-4">
-          <button type="button" id="closeCheckin" class="btn-ghost w-full">Cancelar</button>
-          <button type="submit" class="btn-primary w-full">
-            <span id="checkinSubmitBtnText">Confirmar</span>
-            <span id="checkinSpinner" class="hidden"><i class="fas fa-spinner animate-spin"></i></span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Outros modais essenciais (Inscrição, Sucesso, Edição) devem ser mantidos da versão original para não estourar o limite de caracteres, 
-       mas certifique-se que o botão de fechar (X) ou cancelar tenham os IDs corretos. -->
-  
-  <div id="modalEnrollSuccess" class="modal-backdrop">
-    <div class="modal-card modal-card-sm p-8 text-center">
-      <i class="fas fa-check-circle text-6xl text-green-500 mb-6"></i>
-      <h3 class="text-2xl font-bold">Inscrição Confirmada!</h3>
-      <p id="enrollProtocol" class="text-3xl font-bold text-blue-600 bg-blue-50 py-4 my-4"></p>
-      <button id="closeEnrollSuccess" class="btn-primary w-full">Fechar</button>
-    </div>
-  </div>
-
-  <div id="modalEnroll" class="modal-backdrop">
-    <div class="modal-card modal-card-md p-8">
-      <div class="flex justify-between mb-4">
-          <h3 class="text-2xl font-bold">Inscrição</h3>
-          <button id="closeEnroll"><i class="fas fa-times"></i></button>
-      </div>
-      <form id="enrollForm" class="space-y-4">
-          <input id="enrollName" class="admin-input" placeholder="Nome" required>
-          <input id="enrollEmail" class="admin-input" placeholder="Email" required>
-          <input id="enrollPhone" class="admin-input" placeholder="Telefone" required>
-          <input id="enrollSector" class="admin-input" placeholder="Setor" required>
-          <button type="submit" class="btn-primary w-full">
-            <span id="enrollSubmitBtnText">Inscrever</span>
-            <span id="enrollSpinner" class="hidden">...</span>
-          </button>
-      </form>
-    </div>
-  </div>
-
-  <script type="module" src="app.js"></script>
 </body>
 </html>
