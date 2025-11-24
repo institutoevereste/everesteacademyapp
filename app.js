@@ -47,13 +47,32 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Referências de Coleção (Caminhos exatos do seu sistema original)
+// Referências de Coleção
 const getCol = (name) => collection(db, `artifacts/${appId}/public/data/${name}`);
 const getAdminsCol = () => collection(db, 'admins');
 
 // --- Componentes Reutilizáveis ---
 
 const LoadingSpinner = () => <i className="fas fa-spinner animate-spin mr-2"></i>;
+
+// NOVO: Componente ScrollProgressBar
+const ScrollProgressBar = () => {
+    const [width, setWidth] = React.useState(0);
+
+    React.useEffect(() => {
+        const handleScroll = () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+            setWidth(scrolled);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    return <div id="scroll-progress" style={{ width: `${width}%` }}></div>;
+};
 
 const Modal = ({ isOpen, onClose, title, children, size = "modal-md" }) => {
   if (!isOpen) return null;
@@ -155,6 +174,9 @@ function App() {
   
   return (
     <div className="min-h-screen flex flex-col">
+        {/* Barra de Progresso de Scroll Inserida Aqui */}
+        <ScrollProgressBar />
+
         {view !== 'admin' && (
             <Header 
                 isAdmin={isAdmin} 
@@ -351,7 +373,6 @@ const CourseDetailView = ({ course, user, hasCheckedIn, onBack, setUserCheckins 
                             ))}
                         </div>
 
-                        {/* Seção de Atividades Práticas (Restaurada do original) */}
                         {activities.length > 0 && (
                             <div className="mb-8">
                                 <h3 className="text-xl font-bold mb-4">Atividades Práticas</h3>
@@ -368,7 +389,6 @@ const CourseDetailView = ({ course, user, hasCheckedIn, onBack, setUserCheckins 
                             </div>
                         )}
 
-                        {/* Seção de Requisitos (Restaurada do original) */}
                         {requirements.length > 0 && (
                             <div className="mb-8">
                                 <h3 className="text-xl font-bold mb-4">Requisitos</h3>
@@ -500,7 +520,7 @@ const AdminPanel = ({ courses, instructors, onExit, currentUser }) => {
                 </div>
 
                 <div className="p-6 md:p-10 max-w-7xl mx-auto w-full">
-                    {tab === 'dashboard' && <AdminDashboard />}
+                    {tab === 'dashboard' && <AdminDashboard courses={courses} instructors={instructors} />}
                     {tab === 'courses' && <AdminCourses courses={courses} instructors={instructors} />}
                     {tab === 'enrollments' && <AdminEnrollments courses={courses} />}
                     {tab === 'instructors' && <AdminInstructors instructors={instructors} />}
@@ -518,11 +538,12 @@ const AdminNavLink = ({ icon, label, active, onClick }) => (
 
 // --- Sub-componentes Admin ---
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ courses, instructors }) => {
     const [stats, setStats] = React.useState({ enrollments: 0, checkins: 0, nps: 0 });
     const [enrollmentData, setEnrollmentData] = React.useState({ labels: [], datasets: [] });
     const [ratingsData, setRatingsData] = React.useState({ labels: [], datasets: [] });
     const [comments, setComments] = React.useState([]);
+    const [isExporting, setIsExporting] = React.useState(false);
 
     React.useEffect(() => {
         const loadStats = async () => {
@@ -588,20 +609,158 @@ const AdminDashboard = () => {
         loadStats();
     }, []);
 
-    const exportDashboard = () => {
-        const doc = new window.jspdf.jsPDF();
-        doc.text("Relatório Dashboard Evereste Academy", 14, 20);
-        doc.text(`Matrículas: ${stats.enrollments}`, 14, 30);
-        doc.text(`Check-ins: ${stats.checkins}`, 14, 40);
-        doc.text(`NPS: ${stats.nps}`, 14, 50);
-        doc.save('dashboard_report.pdf');
+    const exportCompleteReport = async () => {
+        setIsExporting(true);
+        try {
+            const doc = new window.jspdf.jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const today = new Date().toLocaleDateString('pt-PT');
+
+            // Buscar todos os dados atualizados
+            const [enrSnap, chkSnap, ratSnap] = await Promise.all([
+                getDocs(getCol('enrollments')),
+                getDocs(getCol('checkins')),
+                getDocs(getCol('ratings'))
+            ]);
+
+            const enrollments = enrSnap.docs.map(d => d.data());
+            const checkins = chkSnap.docs.map(d => d.data());
+            const ratings = ratSnap.docs.map(d => d.data());
+
+            // --- PÁGINA 1: CAPA E DASHBOARD ---
+            
+            // Cabeçalho Azul
+            doc.setFillColor(0, 102, 204); 
+            doc.rect(0, 0, pageWidth, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Relatório Executivo - Evereste Academy", 14, 20);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Gerado em ${today}`, 14, 30);
+
+            // KPIs Principais
+            doc.setTextColor(0, 0, 0);
+            let yPos = 60;
+            doc.setFontSize(14);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Visão Geral", 14, yPos);
+            yPos += 10;
+
+            const totalEnrollments = enrollments.length;
+            const totalCheckins = checkins.length;
+            let promoters = 0, detractors = 0;
+            ratings.forEach(r => { if(r.rating === 5) promoters++; if(r.rating <= 3) detractors++; });
+            const nps = ratings.length > 0 ? Math.round(((promoters - detractors) / ratings.length) * 100) : 0;
+
+            const drawCard = (x, label, value, color) => {
+                doc.setDrawColor(220);
+                doc.setFillColor(250);
+                doc.roundedRect(x, yPos, 55, 35, 3, 3, 'FD');
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(label, x + 5, yPos + 10);
+                doc.setFontSize(18);
+                doc.setTextColor(color[0], color[1], color[2]);
+                doc.setFont('helvetica', 'bold');
+                doc.text(String(value), x + 5, yPos + 25);
+            };
+
+            drawCard(14, "TOTAL MATRÍCULAS", totalEnrollments, [0, 102, 204]);
+            drawCard(80, "TOTAL CHECK-INS", totalCheckins, [0, 168, 150]);
+            drawCard(146, "NPS SCORE", nps, [106, 76, 147]);
+
+            yPos += 50;
+
+            // Tabela Performance por Curso
+            doc.setFontSize(14);
+            doc.setTextColor(0);
+            doc.text("Desempenho por Curso", 14, yPos);
+            yPos += 6;
+
+            const courseStats = courses.map(c => {
+                const cEnr = enrollments.filter(e => e.courseId === c.id).length;
+                const cChk = checkins.filter(k => k.courseId === c.id).length;
+                const cRats = ratings.filter(r => r.courseId === c.id);
+                const avgRat = cRats.length ? (cRats.reduce((a,b)=>a+b.rating,0)/cRats.length).toFixed(1) : "N/A";
+                return [c.title, cEnr, cChk, avgRat];
+            });
+
+            doc.autoTable({
+                startY: yPos,
+                head: [['Curso', 'Matrículas', 'Check-ins', 'Média Avaliação']],
+                body: courseStats,
+                theme: 'grid',
+                headStyles: { fillColor: [0, 102, 204] },
+                styles: { fontSize: 10 }
+            });
+
+            // --- PÁGINA 2: FEEDBACKS ---
+            doc.addPage();
+            doc.text("Feedbacks e Comentários Recentes", 14, 20);
+
+            const feedbackRows = ratings
+                .filter(r => r.comment)
+                .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
+                .map(r => [
+                    r.instructorName || '-',
+                    r.rating + ' ★',
+                    r.comment,
+                    r.createdAt ? new Date(r.createdAt.seconds*1000).toLocaleDateString('pt-PT') : '-'
+                ]);
+
+            doc.autoTable({
+                startY: 25,
+                head: [['Instrutor', 'Nota', 'Comentário', 'Data']],
+                body: feedbackRows,
+                theme: 'striped',
+                headStyles: { fillColor: [255, 193, 7], textColor: [50,50,50] },
+                columnStyles: { 2: { cellWidth: 90 } },
+                styles: { fontSize: 9 }
+            });
+
+            // --- PÁGINA 3: LISTA DE ALUNOS ---
+            doc.addPage();
+            doc.text("Lista Completa de Matrículas", 14, 20);
+
+            const studentRows = enrollments
+                .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
+                .map(e => [
+                    e.protocol || '-',
+                    e.name,
+                    e.courseName,
+                    e.email,
+                    e.sector,
+                    e.createdAt ? new Date(e.createdAt.seconds*1000).toLocaleDateString('pt-PT') : '-'
+                ]);
+
+            doc.autoTable({
+                startY: 25,
+                head: [['Protocolo', 'Nome', 'Curso', 'Email', 'Setor', 'Data']],
+                body: studentRows,
+                theme: 'grid',
+                headStyles: { fillColor: [60, 60, 60] },
+                styles: { fontSize: 8 }
+            });
+
+            doc.save(`Relatorio_Evereste_Completo_${Date.now()}.pdf`);
+
+        } catch (err) {
+            console.error("Erro exportação:", err);
+            alert("Erro ao gerar relatório.");
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     return (
         <div className="space-y-6 animate-fade-in">
             <div className="flex justify-between items-center flex-wrap gap-4">
                 <h2 className="text-2xl font-bold">Dashboard</h2>
-                <button onClick={exportDashboard} className="btn-primary px-4 py-2 text-sm"><i className="fas fa-file-pdf mr-2"></i>Exportar Relatório</button>
+                <button onClick={exportCompleteReport} disabled={isExporting} className="btn-primary px-4 py-2 text-sm">
+                    {isExporting ? <LoadingSpinner/> : <><i className="fas fa-file-pdf mr-2"></i>Exportar Relatório Completo</>}
+                </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
