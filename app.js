@@ -115,14 +115,13 @@ const DashboardChart = ({ type, data, options, id }) => {
 function App() {
   const [user, setUser] = React.useState(null);
   const [isAdmin, setIsAdmin] = React.useState(false);
-  const [view, setView] = React.useState('home'); // home, detail, admin
+  const [view, setView] = React.useState('home'); 
   const [selectedCourse, setSelectedCourse] = React.useState(null);
   const [userCheckins, setUserCheckins] = React.useState({});
   
   const [courses, setCourses] = React.useState([]);
   const [instructors, setInstructors] = React.useState([]);
   const [aboutImages, setAboutImages] = React.useState([]);
-  const [completedCourses, setCompletedCourses] = React.useState([]);
 
   // Auth Listener
   React.useEffect(() => {
@@ -154,9 +153,9 @@ function App() {
     });
   }, []);
 
-  // Data Listeners (CORRIGIDO: Adicionado if(!user) para evitar erro no modo anônimo)
+  // Data Listeners (CORREÇÃO: Adicionado if(!user) para evitar race condition no modo anônimo)
   React.useEffect(() => {
-    if (!user) return; // Espera autenticação
+    if (!user) return; 
 
     const unsubCourses = onSnapshot(getCol('courses'), (snap) => {
       const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -171,12 +170,8 @@ function App() {
       const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setAboutImages(list);
     });
-    const unsubCompletedCourses = onSnapshot(getCol('completed_courses'), (snap) => {
-        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setCompletedCourses(list);
-    });
 
-    return () => { unsubCourses(); unsubInstructors(); unsubAboutImages(); unsubCompletedCourses(); };
+    return () => { unsubCourses(); unsubInstructors(); unsubAboutImages(); };
   }, [user]);
 
   const goHome = () => setView('home');
@@ -202,7 +197,6 @@ function App() {
             {view === 'home' && (
                 <HomeView 
                     courses={courses} 
-                    completedCourses={completedCourses} 
                     aboutImages={aboutImages} 
                     onCourseClick={goDetail} 
                 />
@@ -223,7 +217,6 @@ function App() {
                     courses={courses} 
                     instructors={instructors}
                     aboutImages={aboutImages}
-                    completedCourses={completedCourses}
                     onExit={goHome}
                     currentUser={user}
                 />
@@ -263,15 +256,10 @@ const Header = ({ isAdmin, onAdminClick, onLogout, goHome }) => (
     </header>
 );
 
-const HomeView = ({ courses, completedCourses, aboutImages, onCourseClick }) => {
+const HomeView = ({ courses, aboutImages, onCourseClick }) => {
     const openCourses = courses.filter(c => c.status === 'aberto');
     const soonCourses = courses.filter(c => c.status === 'em_breve');
-    // completedCourses agora vem direto dos props, mas se quisermos usar o status do curso:
-    const coursesMarkedAsCompleted = courses.filter(c => c.status === 'concluido');
-    
-    // Combinar ambas as fontes se necessário, ou usar apenas uma. 
-    // Vamos usar a lista unificada se houver cursos com status 'concluido', senão usa a coleção legada
-    const finalCompletedCourses = coursesMarkedAsCompleted.length > 0 ? coursesMarkedAsCompleted : completedCourses;
+    const completedCourses = courses.filter(c => c.status === 'concluido');
 
     return (
         <div className="animate-fade-in">
@@ -375,7 +363,7 @@ const HomeView = ({ courses, completedCourses, aboutImages, onCourseClick }) => 
                                     <div className="text-center p-6">
                                         <i className="fas fa-images text-3xl mb-2"></i>
                                         <p>Sem fotos configuradas</p>
-                                        <p className="text-xs">Adicione no Painel Admin {'>'} Fotos Sobre</p>
+                                        <p className="text-xs">Adicione no Painel Admin &gt; Fotos Sobre</p>
                                     </div>
                                 </div>
                             )}
@@ -385,12 +373,12 @@ const HomeView = ({ courses, completedCourses, aboutImages, onCourseClick }) => 
             </section>
 
             {/* SEÇÃO CURSOS CONCLUÍDOS (STATUS = CONCLUIDO) */}
-            {finalCompletedCourses.length > 0 && (
+            {completedCourses.length > 0 && (
                 <section className="py-20 bg-slate-50 border-t border-slate-200">
                     <div className="container mx-auto px-6">
                         <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">Cursos Concluídos</h2>
                         <div className="grid md:grid-cols-3 gap-8">
-                            {finalCompletedCourses.map(course => (
+                            {completedCourses.map(course => (
                                 <div key={course.id} className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col h-full">
                                     <div className="h-48 bg-gray-200 overflow-hidden relative">
                                         <img src={course.headerOverlayImage || course.coverImage} alt={course.title} className="w-full h-full object-cover" />
@@ -614,7 +602,7 @@ const Footer = ({ onAdminClick }) => (
 
 // --- Painel Admin ---
 
-const AdminPanel = ({ courses, instructors, aboutImages, completedCourses, onExit, currentUser }) => {
+const AdminPanel = ({ courses, instructors, aboutImages, onExit, currentUser }) => {
     const [tab, setTab] = React.useState('dashboard');
     const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
@@ -639,7 +627,6 @@ const AdminPanel = ({ courses, instructors, aboutImages, completedCourses, onExi
                     <AdminNavLink icon="users" label="Matrículas" active={tab === 'enrollments'} onClick={() => handleTabChange('enrollments')} />
                     <AdminNavLink icon="chalkboard-user" label="Instrutores" active={tab === 'instructors'} onClick={() => handleTabChange('instructors')} />
                     <AdminNavLink icon="images" label="Fotos Sobre" active={tab === 'about-images'} onClick={() => handleTabChange('about-images')} />
-                    {/* Aba separada para cursos concluídos removida para simplificar a gestão em uma só tabela, mas mantemos os componentes se necessário */}
                 </nav>
 
                 <div className="p-4 border-t border-slate-100">
@@ -709,7 +696,9 @@ const AdminDashboard = ({ courses, instructors }) => {
 
             const nps = total > 0 ? Math.round(((promoters - detractors) / total) * 100) : 0;
             setStats({ enrollments: enrSnap.size, checkins: chkSnap.size, nps });
-            commentsList.sort((a,b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+            
+            // Ordenar comentários por data decrescente
+            commentsList.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
             setComments(commentsList);
 
             const dates = {};
@@ -881,7 +870,7 @@ const AdminDashboard = ({ courses, instructors }) => {
 
         } catch (err) {
             console.error("Erro exportação:", err);
-            alert("Erro ao gerar relatório.");
+            alert("Erro ao gerar relatório. Verifique console.");
         } finally {
             setIsExporting(false);
         }
@@ -926,7 +915,7 @@ const AdminDashboard = ({ courses, instructors }) => {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                 <h3 className="font-bold mb-4">Feedback Recente</h3>
                 <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
-                    {comments.map((c, i) => (
+                    {comments.length === 0 ? <p className="text-gray-400 text-sm italic">Sem comentários ainda.</p> : comments.map((c, i) => (
                         <div key={i} className="border-b border-slate-50 pb-2 last:border-0">
                             <div className="flex justify-between">
                                 <span className="font-bold text-sm text-slate-700">{c.instructorName}</span>
