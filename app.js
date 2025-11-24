@@ -58,30 +58,81 @@
       // Adicionando a imagem solicitada manualmente à lista de exibição
       const staticImage = { id: 'manual-added-1', url: 'https://i.postimg.cc/SRMSF4W1/workshop-ia-1.jpg' };
       // Combina a imagem estática com as imagens vindas do banco de dados
-      const displayImages = [staticImage, ...(images || [])];
+      // Filtra valores nulos/undefined para evitar erros
+      const dbImages = images || [];
+      const displayImages = [staticImage, ...dbImages];
+      const hasMultipleImages = displayImages.length > 1;
 
       return (
-        <section className="py-20 px-6 bg-slate-50">
-          <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl font-bold mb-6 text-slate-800">Sobre o Projeto</h2>
-              <p className="text-slate-600 mb-6 leading-relaxed">
-                O Programa Evereste Academy é uma iniciativa do Instituto Evereste que oferece experiências imersivas.
-                Unimos design moderno, tecnologia e didática para acelerar o desenvolvimento.
+        <section className="py-24 px-6 bg-slate-50 overflow-hidden relative">
+           {/* Elemento decorativo de fundo */}
+           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
+          <div className="container mx-auto grid md:grid-cols-2 gap-16 items-center relative z-10">
+            {/* Coluna de Texto */}
+            <div className="order-2 md:order-1">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Sobre o Projeto</h2>
+              <p className="text-slate-600 mb-8 leading-relaxed text-lg">
+                O Programa Evereste Academy é uma iniciativa estratégica do Instituto Evereste. 
+                Nossa missão é oferecer experiências imersivas que unem design moderno, 
+                tecnologia de ponta e didática avançada para acelerar o desenvolvimento profissional.
               </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3"><i className="fas fa-check-circle text-teal-500"></i> Foco em resultados</li>
-                <li className="flex items-center gap-3"><i className="fas fa-check-circle text-teal-500"></i> Instrutores experientes</li>
-              </ul>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {displayImages.length > 0 ? displayImages.slice(0, 4).map((img, idx) => (
-                <div key={img.id || idx} className="rounded-xl overflow-hidden shadow-lg h-40 group">
-                  <img src={img.url} alt="Sobre" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+                    <div className="bg-teal-100 text-teal-600 p-3 rounded-lg text-xl"><i className="fas fa-bullseye"></i></div>
+                    <div>
+                        <h4 className="font-bold text-slate-800">Foco em Resultados</h4>
+                        <p className="text-sm text-slate-500">Aprendizado prático aplicável ao dia a dia.</p>
+                    </div>
                 </div>
-              )) : (
-                <div className="col-span-2 bg-gray-200 h-64 rounded-xl flex items-center justify-center text-gray-400">Sem imagens na galeria</div>
-              )}
+                <div className="flex items-start gap-4 p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+                    <div className="bg-blue-100 text-blue-600 p-3 rounded-lg text-xl"><i className="fas fa-chalkboard-teacher"></i></div>
+                    <div>
+                        <h4 className="font-bold text-slate-800">Mentoria Expert</h4>
+                        <p className="text-sm text-slate-500">Acompanhamento com profissionais seniores.</p>
+                    </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Coluna de Imagem - Lógica Adaptativa */}
+            <div className="order-1 md:order-2 relative group">
+               {/* Efeito de sombra colorida atrás da imagem */}
+               <div className="absolute inset-0 bg-blue-600 rounded-2xl blur-xl opacity-20 transform translate-y-4 group-hover:translate-y-6 transition-transform duration-500"></div>
+               
+               {!hasMultipleImages ? (
+                   // LAYOUT PARA IMAGEM ÚNICA (CASO ATUAL)
+                   <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white transform md:rotate-2 hover:rotate-0 transition-all duration-700 ease-out">
+                       <img 
+                         src={displayImages[0].url} 
+                         alt="Workshop IA" 
+                         className="w-full h-auto object-cover min-h-[300px]"
+                       />
+                       {/* Overlay gradiente sutil */}
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+                       <div className="absolute bottom-4 left-4 text-white font-medium text-sm bg-black/30 backdrop-blur-sm px-3 py-1 rounded-full">
+                         <i className="fas fa-camera mr-2"></i>Registro Oficial
+                       </div>
+                   </div>
+               ) : (
+                   // LAYOUT MOSAICO (CASO TENHA MAIS IMAGENS NO FUTURO)
+                   <div className="grid grid-cols-2 gap-3 relative bg-white p-2 rounded-2xl shadow-xl rotate-1">
+                       {displayImages.slice(0, 3).map((img, idx) => (
+                           <div 
+                             key={img.id || idx} 
+                             className={`rounded-xl overflow-hidden relative ${idx === 0 ? 'col-span-2 h-48 sm:h-64' : 'h-32 sm:h-40'}`}
+                           >
+                               <img src={img.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="Galeria" />
+                           </div>
+                       ))}
+                       {displayImages.length > 3 && (
+                          <div className="h-32 sm:h-40 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 font-bold border-2 border-dashed border-slate-200">
+                              +{displayImages.length - 3}
+                          </div>
+                       )}
+                   </div>
+               )}
             </div>
           </div>
         </section>
