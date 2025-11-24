@@ -21,7 +21,7 @@
 
     // === COMPONENTES UI GERAIS ===
     const Header = ({ user, isAdmin, onAdminClick, onLogout, goHome }) => (
-      <header className="header-glass py-4 px-6 flex justify-between items-center">
+      <header className="header-glass py-4 px-6 flex justify-between items-center sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
         <div className="flex items-center gap-2 cursor-pointer" onClick={goHome}>
           <img src="https://i.postimg.cc/hvvWCwnk/Prancheta-1-1.png" alt="Logo" className="h-10" />
         </div>
@@ -54,39 +54,46 @@
       </section>
     );
 
-    const AboutSection = ({ images }) => (
-      <section className="py-20 px-6 bg-slate-50">
-        <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-4xl font-bold mb-6 text-slate-800">Sobre o Projeto</h2>
-            <p className="text-slate-600 mb-6 leading-relaxed">
-              O Programa Evereste Academy é uma iniciativa do Instituto Evereste que oferece experiências imersivas.
-              Unimos design moderno, tecnologia e didática para acelerar o desenvolvimento.
-            </p>
-            <ul className="space-y-3 mb-8">
-               <li className="flex items-center gap-3"><i className="fas fa-check-circle text-teal-500"></i> Foco em resultados</li>
-               <li className="flex items-center gap-3"><i className="fas fa-check-circle text-teal-500"></i> Instrutores experientes</li>
-            </ul>
+    const AboutSection = ({ images }) => {
+      // Adicionando a imagem solicitada manualmente à lista de exibição
+      const staticImage = { id: 'manual-added-1', url: 'https://i.postimg.cc/SRMSF4W1/workshop-ia-1.jpg' };
+      // Combina a imagem estática com as imagens vindas do banco de dados
+      const displayImages = [staticImage, ...(images || [])];
+
+      return (
+        <section className="py-20 px-6 bg-slate-50">
+          <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-4xl font-bold mb-6 text-slate-800">Sobre o Projeto</h2>
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                O Programa Evereste Academy é uma iniciativa do Instituto Evereste que oferece experiências imersivas.
+                Unimos design moderno, tecnologia e didática para acelerar o desenvolvimento.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3"><i className="fas fa-check-circle text-teal-500"></i> Foco em resultados</li>
+                <li className="flex items-center gap-3"><i className="fas fa-check-circle text-teal-500"></i> Instrutores experientes</li>
+              </ul>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {displayImages.length > 0 ? displayImages.slice(0, 4).map((img, idx) => (
+                <div key={img.id || idx} className="rounded-xl overflow-hidden shadow-lg h-40 group">
+                  <img src={img.url} alt="Sobre" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                </div>
+              )) : (
+                <div className="col-span-2 bg-gray-200 h-64 rounded-xl flex items-center justify-center text-gray-400">Sem imagens na galeria</div>
+              )}
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {images && images.length > 0 ? images.slice(0, 4).map((img, idx) => (
-               <div key={img.id} className="rounded-xl overflow-hidden shadow-lg h-40">
-                 <img src={img.url} alt="Sobre" className="w-full h-full object-cover" />
-               </div>
-            )) : (
-              <div className="col-span-2 bg-gray-200 h-64 rounded-xl flex items-center justify-center text-gray-400">Sem imagens na galeria</div>
-            )}
-          </div>
-        </div>
-      </section>
-    );
+        </section>
+      );
+    };
 
     const CourseCard = ({ course, onClick }) => {
       const isCompleted = course.status === 'concluido';
       return (
         <div 
           onClick={() => onClick(course)}
-          className={`card-3d overflow-hidden cursor-pointer flex flex-col h-full ${isCompleted ? 'border-l-8 border-green-500' : ''}`}
+          className={`card-3d overflow-hidden cursor-pointer flex flex-col h-full bg-white rounded-xl shadow-lg transition-all hover:shadow-2xl ${isCompleted ? 'border-l-8 border-green-500' : ''}`}
         >
           <div className="h-48 overflow-hidden relative">
             <div className="absolute inset-0 bg-black/40 z-10"></div>
@@ -368,7 +375,8 @@
         onAddImage, onDeleteImage,
         onAddInstructor, onUpdateInstructor, onDeleteInstructor,
         onDeleteEnrollment,
-        onPopulateDB 
+        onPopulateDB,
+        onExit // Novo prop para sair do admin
     }) => {
       const [activeTab, setActiveTab] = useState('dashboard');
       const [editingCourse, setEditingCourse] = useState(null);
@@ -632,6 +640,7 @@
           case 'about_images': return (
                  <div>
                     <h2 className="text-2xl font-bold mb-4">Galeria "Sobre"</h2>
+                    <p className="mb-4 text-sm text-gray-600 bg-blue-50 p-2 rounded">Nota: Uma imagem fixa do workshop já está sendo exibida automaticamente na página inicial.</p>
                     <form onSubmit={(e) => { e.preventDefault(); onAddImage(e.target.url.value); e.target.reset(); }} className="flex gap-4 mb-6"><input name="url" placeholder="Cole a URL da imagem aqui..." className="flex-1 border p-3 rounded-lg" required /><button className="btn-primary">Adicionar</button></form>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{aboutImages.map(img => (<div key={img.id} className="relative group"><img src={img.url} className="w-full h-32 object-cover rounded-lg" /><button onClick={() => onDeleteImage(img.id)} className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded opacity-0 group-hover:opacity-100"><i className="fas fa-trash"></i></button></div>))}</div>
                  </div>
@@ -642,13 +651,19 @@
 
       return (
         <div className="flex min-h-screen bg-gray-100">
-           <nav className="w-64 bg-white border-r p-6 flex-shrink-0">
-              <h2 className="font-bold text-xl mb-8">Admin Panel</h2>
-              <ul className="space-y-2">
+           <nav className="w-64 bg-white border-r p-6 flex-shrink-0 flex flex-col">
+              <h2 className="font-bold text-xl mb-8 text-slate-800">Admin Panel</h2>
+              <ul className="space-y-2 flex-1">
                  {[{id: 'dashboard', label: 'Dashboard', icon: 'chart-line'},{id: 'courses', label: 'Cursos', icon: 'graduation-cap'},{id: 'instructors', label: 'Instrutores', icon: 'chalkboard-teacher'},{id: 'enrollments', label: 'Matrículas', icon: 'users'},{id: 'about_images', label: 'Imagens Sobre', icon: 'images'}].map(item => (
                      <li key={item.id}><button onClick={() => setActiveTab(item.id)} className={`w-full text-left p-3 rounded-lg flex items-center gap-3 ${activeTab === item.id ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}><i className={`fas fa-${item.icon} w-6`}></i> {item.label}</button></li>
                  ))}
               </ul>
+              {/* === BOTÃO DE SAIR DO ADMIN (NOVO) === */}
+              <div className="pt-6 border-t mt-4">
+                  <button onClick={onExit} className="w-full text-left p-3 rounded-lg flex items-center gap-3 text-red-600 hover:bg-red-50 font-medium">
+                      <i className="fas fa-sign-out-alt w-6"></i> Voltar ao Site
+                  </button>
+              </div>
            </nav>
            <main className="flex-1 p-8 overflow-y-auto">{renderTabContent()}</main>
            {editingCourse && <CourseEditorModal course={editingCourse} instructors={instructors} onClose={() => setEditingCourse(null)} onSave={onUpdateCourse} />}
@@ -787,6 +802,7 @@
                     onAddImage={handleAddImage} onDeleteImage={handleDeleteImage}
                     onAddInstructor={handleAddInstructor} onUpdateInstructor={handleUpdateInstructor} onDeleteInstructor={handleDeleteInstructor}
                     onDeleteEnrollment={handleDeleteEnrollment} onPopulateDB={handlePopulateDB}
+                    onExit={() => setView('home')} // Passando a função de sair
                 />;
       }
 
