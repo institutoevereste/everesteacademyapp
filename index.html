@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Evereste Academy - React</title>
+  <title>Evereste Academy</title>
   
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,21 +11,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   
-  <!-- Styles -->
+  <!-- CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Libs Externas -->
+  <!-- Libs JS (Carregadas Sincronamente) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- React & Babel Standalone -->
+  <!-- React -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Firebase Loader Strategy (Global Exposure) -->
+  <!-- Firebase Loader (Módulo que expõe para window) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { 
@@ -37,25 +37,25 @@
       collection, query, where, getDocs, onSnapshot, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Expor Firebase para o app.js (window)
-    window.Firebase = {
+    // Expor tudo no objeto window para o app.js usar sem imports
+    window.FirebaseSDK = {
       initializeApp,
       getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken,
       getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, serverTimestamp
     };
 
-    // Disparar evento para avisar que o Firebase está pronto (opcional, mas boa prática)
+    console.log("Firebase SDK carregado no window.FirebaseSDK");
+    
+    // Disparar evento personalizado
     window.dispatchEvent(new Event('firebase-ready'));
   </script>
 </head>
 
 <body class="antialiased bg-slate-50 text-slate-900">
   
-  <!-- Root do React -->
   <div id="root"></div>
 
-  <!-- Aplicação React Principal -->
-  <!-- data-type="text/babel" para que o Babel processe o JSX -->
+  <!-- App Script (Babel) -->
   <script type="text/babel" src="app.js"></script>
 
 </body>
