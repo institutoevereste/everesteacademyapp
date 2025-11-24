@@ -5,57 +5,73 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evereste Academy</title>
   
-  <!-- Fonts & Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  
-  <!-- CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Libs JS (Carregadas Sincronamente) -->
+  <!-- Bibliotecas JS Globais -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- React -->
+  
+  <!-- React & Babel -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- Firebase Loader (Módulo que expõe para window) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, 
-      signInAnonymously, signInWithCustomToken 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, 
-      collection, query, where, getDocs, onSnapshot, serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // Expor tudo no objeto window para o app.js usar sem imports
-    window.FirebaseSDK = {
-      initializeApp,
-      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken,
-      getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, serverTimestamp
-    };
-
-    console.log("Firebase SDK carregado no window.FirebaseSDK");
-    
-    // Disparar evento personalizado
-    window.dispatchEvent(new Event('firebase-ready'));
-  </script>
 </head>
+<body>
 
-<body class="antialiased bg-slate-50 text-slate-900">
-  
+  <!-- Tela de Carregamento Inicial -->
+  <div id="app-loader">
+    <div class="text-center">
+      <div class="spinner mb-4 mx-auto"></div>
+      <p class="text-gray-500 font-semibold">A carregar Evereste Academy...</p>
+    </div>
+  </div>
+
+  <!-- Barra de Progresso -->
+  <div id="scroll-progress"></div>
+
+  <!-- Ponto de Montagem do React -->
   <div id="root"></div>
 
-  <!-- App Script (Babel) -->
+  <!-- FIREBASE SDK LOADER (Module) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    // Configuração do Firebase
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify({
+      apiKey: "AIzaSyB0xvVzytOx4dumokND-dr926krSO4-CqU",
+      authDomain: "academylids.firebaseapp.com",
+      projectId: "academylids",
+      storageBucket: "academylids.firebasestorage.app",
+      messagingSenderId: "826478835273",
+      appId: "1:826478835273:web:0995d64419276b932cb198",
+      measurementId: "G-T2TN7FL590"
+    }));
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'academylids';
+
+    // Inicialização
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Expor SDK para o objeto global window
+    window.FirebaseSDK = {
+      app, auth, db, appId,
+      signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously,
+      doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, serverTimestamp
+    };
+
+    console.log("Firebase SDK Carregado e Exposto.");
+  </script>
+
+  <!-- Lógica da Aplicação (React) -->
   <script type="text/babel" src="app.js"></script>
 
 </body>
