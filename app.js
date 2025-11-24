@@ -91,7 +91,7 @@ const Modal = ({ isOpen, onClose, title, children, size = "modal-md" }) => {
   );
 };
 
-// --- Componente de Gráficos (Wrapper para Chart.js) ---
+// --- Componente de Gráficos ---
 const DashboardChart = ({ type, data, options, id }) => {
     const canvasRef = React.useRef(null);
     const chartRef = React.useRef(null);
@@ -115,7 +115,7 @@ const DashboardChart = ({ type, data, options, id }) => {
 function App() {
   const [user, setUser] = React.useState(null);
   const [isAdmin, setIsAdmin] = React.useState(false);
-  const [view, setView] = React.useState('home'); 
+  const [view, setView] = React.useState('home'); // home, detail, admin
   const [selectedCourse, setSelectedCourse] = React.useState(null);
   const [userCheckins, setUserCheckins] = React.useState({});
   
@@ -153,9 +153,9 @@ function App() {
     });
   }, []);
 
-  // Data Listeners (CORREÇÃO: Adicionado if(!user) para evitar race condition no modo anônimo)
+  // Data Listeners
   React.useEffect(() => {
-    if (!user) return; 
+    if (!user) return;
 
     const unsubCourses = onSnapshot(getCol('courses'), (snap) => {
       const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -257,9 +257,10 @@ const Header = ({ isAdmin, onAdminClick, onLogout, goHome }) => (
 );
 
 const HomeView = ({ courses, aboutImages, onCourseClick }) => {
+    // Filtros baseados no status dos cursos
     const openCourses = courses.filter(c => c.status === 'aberto');
     const soonCourses = courses.filter(c => c.status === 'em_breve');
-    const completedCourses = courses.filter(c => c.status === 'concluido');
+    const completedCoursesList = courses.filter(c => c.status === 'concluido');
 
     return (
         <div className="animate-fade-in">
@@ -373,12 +374,12 @@ const HomeView = ({ courses, aboutImages, onCourseClick }) => {
             </section>
 
             {/* SEÇÃO CURSOS CONCLUÍDOS (STATUS = CONCLUIDO) */}
-            {completedCourses.length > 0 && (
+            {completedCoursesList.length > 0 && (
                 <section className="py-20 bg-slate-50 border-t border-slate-200">
                     <div className="container mx-auto px-6">
                         <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">Cursos Concluídos</h2>
                         <div className="grid md:grid-cols-3 gap-8">
-                            {completedCourses.map(course => (
+                            {completedCoursesList.map(course => (
                                 <div key={course.id} className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col h-full">
                                     <div className="h-48 bg-gray-200 overflow-hidden relative">
                                         <img src={course.headerOverlayImage || course.coverImage} alt={course.title} className="w-full h-full object-cover" />
@@ -696,9 +697,7 @@ const AdminDashboard = ({ courses, instructors }) => {
 
             const nps = total > 0 ? Math.round(((promoters - detractors) / total) * 100) : 0;
             setStats({ enrollments: enrSnap.size, checkins: chkSnap.size, nps });
-            
-            // Ordenar comentários por data decrescente
-            commentsList.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+            commentsList.sort((a,b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
             setComments(commentsList);
 
             const dates = {};
@@ -1331,6 +1330,10 @@ const CourseFormModal = ({ isOpen, onClose, course, instructors }) => {
                             <span className="text-sm font-bold">Liberar Avaliação</span>
                         </label>
                     </div>
+                    <p className="text-xs text-blue-600 mt-2">
+                        <i className="fas fa-info-circle mr-1"></i>
+                        Marque "Liberar Check-in" para permitir que os alunos confirmem presença. Marque "Liberar Avaliação" para permitir feedback após o check-in.
+                    </p>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t">
