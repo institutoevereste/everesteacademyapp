@@ -24,6 +24,29 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Firebase Loader Strategy (Global Exposure) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { 
+      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, 
+      signInAnonymously, signInWithCustomToken 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, 
+      collection, query, where, getDocs, onSnapshot, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Expor Firebase para o app.js (window)
+    window.Firebase = {
+      initializeApp,
+      getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken,
+      getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, serverTimestamp
+    };
+
+    // Disparar evento para avisar que o Firebase está pronto (opcional, mas boa prática)
+    window.dispatchEvent(new Event('firebase-ready'));
+  </script>
 </head>
 
 <body class="antialiased bg-slate-50 text-slate-900">
@@ -32,7 +55,8 @@
   <div id="root"></div>
 
   <!-- Aplicação React Principal -->
-  <script type="text/babel" data-type="module" src="app.js"></script>
+  <!-- data-type="text/babel" para que o Babel processe o JSX -->
+  <script type="text/babel" src="app.js"></script>
 
 </body>
 </html>
